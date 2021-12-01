@@ -1,0 +1,6 @@
+version: aliyunpan/v1beta
+ali-drive:
+  refresh-token: 123
+  drive-id: 1234
+  root-path: 录播同步
+  chunk-size: 10485760
