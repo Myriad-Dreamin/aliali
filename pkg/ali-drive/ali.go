@@ -16,9 +16,7 @@ type Ali struct {
 	uploadClient *resty.Client
 	suppress     suppress.ISuppress
 	accessToken  string
-
-	RefreshInfo ApiRefreshResponse `json:"refresh_info"`
-	Headers     [][2]string        `json:"headers"`
+	Headers      [][2]string `json:"headers"`
 }
 
 func NewAli() *Ali {
