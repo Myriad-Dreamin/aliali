@@ -1,313 +1,313 @@
 package ali_drive
 
 import (
-  "encoding/json"
-  "fmt"
-  "github.com/Myriad-Dreamin/aliali/pkg/suppress"
-  "github.com/go-resty/resty/v2"
-  "io/ioutil"
-  "net/http"
-  "strings"
-  "time"
-  //  "yp/config"
+	"encoding/json"
+	"fmt"
+	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
+	"github.com/go-resty/resty/v2"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
+	//  "yp/config"
 )
 
 type Ali struct {
-  client   *resty.Client
-  suppress suppress.ISuppress
+	client   *resty.Client
+	suppress suppress.ISuppress
 
-  UserInfo    UserInfo    `json:"user_info"`
-  RefreshInfo RefreshInfo `json:"refresh_info"`
-  DataItems   DataItems   `json:"items"`
-  Headers     [][2]string `json:"headers"`
-  DownloadUrl DataItem    `json:"downloadUrl"`
+	UserInfo    UserInfo    `json:"user_info"`
+	RefreshInfo RefreshInfo `json:"refresh_info"`
+	DataItems   DataItems   `json:"items"`
+	Headers     [][2]string `json:"headers"`
+	DownloadUrl DataItem    `json:"downloadUrl"`
 }
 
 func NewAli() *Ali {
-  return &Ali{
-    client: resty.New(),
-  }
+	return &Ali{
+		client: resty.New(),
+	}
 }
 
 type UserInfo struct {
-  Avatar         string `json:"avatar"`
-  CreatedAt      string `json:"created_at"`
-  DefaultDriveId string `json:"default_drive_id"`
-  Description    string `json:"description"`
-  DomainId       string `json:"domain_id"`
-  Email          string `json:"email"`
-  NickName       string `json:"nick_name"`
-  UserId         string `json:"user_id"`
-  UserName       string `json:"user_name"`
+	Avatar         string `json:"avatar"`
+	CreatedAt      string `json:"created_at"`
+	DefaultDriveId string `json:"default_drive_id"`
+	Description    string `json:"description"`
+	DomainId       string `json:"domain_id"`
+	Email          string `json:"email"`
+	NickName       string `json:"nick_name"`
+	UserId         string `json:"user_id"`
+	UserName       string `json:"user_name"`
 }
 
 type RefreshInfo struct {
-  AccessToken    string   `json:"access_token"`
-  Avatar         string   `json:"avatar"`
-  DefaultDriveId string   `json:"default_drive_id"`
-  DeviceId       string   `json:"device_id"`
-  ExistLink      []string `json:"exist_link"`
-  ExpireTime     string   `json:"expire_time"`
-  ExpiresIn      int      `json:"expires_in"`
-  IsFirstLogin   bool     `json:"is_first_login"`
-  NeedLink       bool     `json:"need_link"`
-  NeedRpVerify   bool     `json:"need_rp_verify"`
-  NickName       string   `json:"nick_name"`
-  PinSetup       bool     `json:"pin_setup"`
-  RefreshToken   string   `json:"refresh_token"`
-  Role           string   `json:"role"`
-  State          string   `json:"state"`
-  Status         string   `json:"status"`
-  TokenType      string   `json:"token_type"`
-  UserId         string   `json:"user_id"`
-  UserName       string   `json:"user_name"`
+	AccessToken    string   `json:"access_token"`
+	Avatar         string   `json:"avatar"`
+	DefaultDriveId string   `json:"default_drive_id"`
+	DeviceId       string   `json:"device_id"`
+	ExistLink      []string `json:"exist_link"`
+	ExpireTime     string   `json:"expire_time"`
+	ExpiresIn      int      `json:"expires_in"`
+	IsFirstLogin   bool     `json:"is_first_login"`
+	NeedLink       bool     `json:"need_link"`
+	NeedRpVerify   bool     `json:"need_rp_verify"`
+	NickName       string   `json:"nick_name"`
+	PinSetup       bool     `json:"pin_setup"`
+	RefreshToken   string   `json:"refresh_token"`
+	Role           string   `json:"role"`
+	State          string   `json:"state"`
+	Status         string   `json:"status"`
+	TokenType      string   `json:"token_type"`
+	UserId         string   `json:"user_id"`
+	UserName       string   `json:"user_name"`
 }
 
 type RefreshUserData struct {
 }
 
 type DataItems struct {
-  Item       []DataItem `json:"items"`
-  NextMarker string     `json:"next_marker"`
+	Item       []DataItem `json:"items"`
+	NextMarker string     `json:"next_marker"`
 }
 
 type DataItem struct {
-  Category             string                 `json:"category"`
-  ContentHash          string                 `json:"content_hash"`
-  ContentHashName      string                 `json:"content_hash_name"`
-  ContentType          string                 `json:"content_type"`
-  Crc64Hash            string                 `json:"crc64_hash"`
-  CreatedAt            string                 `json:"created_at"`
-  DomainId             string                 `json:"domain_id"`
-  DownloadUrl          string                 `json:"download_url"`
-  DeviceId             string                 `json:"device_id"`
-  EncryptMode          string                 `json:"encrypt_mode"`
-  FileExtension        string                 `json:"file_extension"`
-  FileId               string                 `json:"file_id"`
-  Hidden               bool                   `json:"hidden"`
-  Name                 string                 `json:"name"`
-  ParentFileId         string                 `json:"parent_file_id"`
-  PunishFlag           int                    `json:"punish_flag"`
-  Size                 int                    `json:"size"`
-  Starred              bool                   `json:"starred"`
-  Status               string                 `json:"status"`
-  Type                 string                 `json:"type"`
-  UpdatedAt            string                 `json:"updated_at"`
-  UploadId             string                 `json:"upload_id"`
-  Url                  string                 `json:"url"`
-  Thumbnail            string                 `json:"thumbnail"`
-  VideoPreviewMetadata map[string]interface{} `json:"video_preview_metadata"`
+	Category             string                 `json:"category"`
+	ContentHash          string                 `json:"content_hash"`
+	ContentHashName      string                 `json:"content_hash_name"`
+	ContentType          string                 `json:"content_type"`
+	Crc64Hash            string                 `json:"crc64_hash"`
+	CreatedAt            string                 `json:"created_at"`
+	DomainId             string                 `json:"domain_id"`
+	DownloadUrl          string                 `json:"download_url"`
+	DeviceId             string                 `json:"device_id"`
+	EncryptMode          string                 `json:"encrypt_mode"`
+	FileExtension        string                 `json:"file_extension"`
+	FileId               string                 `json:"file_id"`
+	Hidden               bool                   `json:"hidden"`
+	Name                 string                 `json:"name"`
+	ParentFileId         string                 `json:"parent_file_id"`
+	PunishFlag           int                    `json:"punish_flag"`
+	Size                 int                    `json:"size"`
+	Starred              bool                   `json:"starred"`
+	Status               string                 `json:"status"`
+	Type                 string                 `json:"type"`
+	UpdatedAt            string                 `json:"updated_at"`
+	UploadId             string                 `json:"upload_id"`
+	Url                  string                 `json:"url"`
+	Thumbnail            string                 `json:"thumbnail"`
+	VideoPreviewMetadata map[string]interface{} `json:"video_preview_metadata"`
 }
 
 var Yunpan = new(Ali)
 
 func init() {
-  //Yunpan.Refresh()
-  Yunpan.Heartbeat()
+	//Yunpan.Refresh()
+	Yunpan.Heartbeat()
 }
 
 func (y *Ali) r() *resty.Request {
-  req := y.client.R()
+	req := y.client.R()
 
-  for i := range y.Headers {
-    req.SetHeader(y.Headers[i][0], y.Headers[i][1])
-  }
+	for i := range y.Headers {
+		req.SetHeader(y.Headers[i][0], y.Headers[i][1])
+	}
 
-  return req
+	return req
 }
 
 type AliRefreshRequest struct {
-  GrantType    string `json:"grant_type"`
-  RefreshToken string `json:"refresh_token"`
+	GrantType    string `json:"grant_type"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func Unmarshal(s suppress.ISuppress, d []byte, i interface{}) bool {
-  err := json.Unmarshal(d, i)
-  if err != nil {
-    s.Suppress(err)
-    return false
-  }
-  return true
+	err := json.Unmarshal(d, i)
+	if err != nil {
+		s.Suppress(err)
+		return false
+	}
+	return true
 }
 
 func (y *Ali) processResp(res *resty.Response, err error) []byte {
-  if err != nil {
-    y.suppress.Suppress(err)
-    return nil
-  }
+	if err != nil {
+		y.suppress.Suppress(err)
+		return nil
+	}
 
-  return res.Body()
+	return res.Body()
 }
 
 func (y *Ali) unmarshal(b []byte, i interface{}) bool {
-  if b == nil {
-    return false
-  }
+	if b == nil {
+		return false
+	}
 
-  err := json.Unmarshal(b, i)
-  if err != nil {
-    y.suppress.Suppress(err)
-    return false
-  }
+	err := json.Unmarshal(b, i)
+	if err != nil {
+		y.suppress.Suppress(err)
+		return false
+	}
 
-  return true
+	return true
 }
 
 func (y *Ali) Refresh(refreshToken string) *RefreshInfo {
-  url := "https://auth.aliyundrive.com/v2/account/token"
-  req := y.r().
-      SetBody(AliRefreshRequest{
-        GrantType:    "refresh_token",
-        RefreshToken: refreshToken,
-      })
+	url := "https://auth.aliyundrive.com/v2/account/token"
+	req := y.r().
+		SetBody(AliRefreshRequest{
+			GrantType:    "refresh_token",
+			RefreshToken: refreshToken,
+		})
 
-  if !y.unmarshal(y.processResp(req.Post(url)), &y.RefreshInfo) {
-    return nil
-  }
-  return &y.RefreshInfo
+	if !y.unmarshal(y.processResp(req.Post(url)), &y.RefreshInfo) {
+		return nil
+	}
+	return &y.RefreshInfo
 }
 
 func (y *Ali) GetList(data map[string]interface{}) (DataItems, error) {
-  url := "https://api.aliyundrive.com/v2/file/list"
-  data_json, _ := json.Marshal(data)
-  header := map[string]string{
-    "Content-Type":  "application/json;charset=UTF-8",
-    "origin":        "https://www.aliyundrive.com",
-    "referer":       "https://www.aliyundrive.com",
-    "authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
-  }
+	url := "https://api.aliyundrive.com/v2/file/list"
+	data_json, _ := json.Marshal(data)
+	header := map[string]string{
+		"Content-Type":  "application/json;charset=UTF-8",
+		"origin":        "https://www.aliyundrive.com",
+		"referer":       "https://www.aliyundrive.com",
+		"authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
+	}
 
-  respByte, _ := y.curl(url, "POST", string(data_json), header)
-  fmt.Println(string(respByte))
-  list := y.DataItems
-  err := json.Unmarshal([]byte(respByte), &list)
-  return list, err
+	respByte, _ := y.curl(url, "POST", string(data_json), header)
+	fmt.Println(string(respByte))
+	list := y.DataItems
+	err := json.Unmarshal([]byte(respByte), &list)
+	return list, err
 }
 
 func (y *Ali) GetDownloadUrl(file_id string) (DataItem, error) {
-  url := "https://api.aliyundrive.com/v2/file/get"
-  data := map[string]interface{}{
-    "drive_id":                y.RefreshInfo.DefaultDriveId,
-    "file_id":                 file_id,
-    "image_thumbnail_process": "image/resize,w_400/format,jpeg",
-    "fields":                  "*",
-    "image_url_process":       "image/resize,w_1920/format,jpeg",
-    "order_by":                "updated_at",
-    "order_direction":         "DESC",
-    "video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
-  }
-  data_json, _ := json.Marshal(data)
-  header := map[string]string{
-    "Content-Type":  "application/json",
-    "origin":        "https://www.aliyundrive.com",
-    "referer":       "https://www.aliyundrive.com",
-    "authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
-  }
-  respByte, _ := y.curl(url, "POST", string(data_json), header)
-  res := DataItem{}
-  err := json.Unmarshal([]byte(respByte), &res)
-  return res, err
+	url := "https://api.aliyundrive.com/v2/file/get"
+	data := map[string]interface{}{
+		"drive_id":                y.RefreshInfo.DefaultDriveId,
+		"file_id":                 file_id,
+		"image_thumbnail_process": "image/resize,w_400/format,jpeg",
+		"fields":                  "*",
+		"image_url_process":       "image/resize,w_1920/format,jpeg",
+		"order_by":                "updated_at",
+		"order_direction":         "DESC",
+		"video_thumbnail_process": "video/snapshot,t_0,f_jpg,ar_auto,w_300",
+	}
+	data_json, _ := json.Marshal(data)
+	header := map[string]string{
+		"Content-Type":  "application/json",
+		"origin":        "https://www.aliyundrive.com",
+		"referer":       "https://www.aliyundrive.com",
+		"authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
+	}
+	respByte, _ := y.curl(url, "POST", string(data_json), header)
+	res := DataItem{}
+	err := json.Unmarshal([]byte(respByte), &res)
+	return res, err
 }
 
 func (y *Ali) GetAudioPlayInfo(file_id string) (map[string]interface{}, error) {
-  url := "https://api.aliyundrive.com/v2/databox/get_audio_play_info"
-  data := map[string]interface{}{
-    "drive_id": y.RefreshInfo.DefaultDriveId,
-    "file_id":  file_id,
-  }
-  data_json, _ := json.Marshal(data)
-  header := map[string]string{
-    "Content-Type":  "application/json",
-    "origin":        "https://www.aliyundrive.com",
-    "referer":       "https://www.aliyundrive.com",
-    "authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
-  }
-  respByte, _ := y.curl(url, "POST", string(data_json), header)
-  info := map[string]interface{}{}
-  err := json.Unmarshal([]byte(respByte), &info)
-  return info, err
+	url := "https://api.aliyundrive.com/v2/databox/get_audio_play_info"
+	data := map[string]interface{}{
+		"drive_id": y.RefreshInfo.DefaultDriveId,
+		"file_id":  file_id,
+	}
+	data_json, _ := json.Marshal(data)
+	header := map[string]string{
+		"Content-Type":  "application/json",
+		"origin":        "https://www.aliyundrive.com",
+		"referer":       "https://www.aliyundrive.com",
+		"authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
+	}
+	respByte, _ := y.curl(url, "POST", string(data_json), header)
+	info := map[string]interface{}{}
+	err := json.Unmarshal([]byte(respByte), &info)
+	return info, err
 }
 
 func (y *Ali) GetVideoPlayInfo(file_id string) (map[string]interface{}, error) {
-  url := "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
-  data := map[string]interface{}{
-    "drive_id": y.RefreshInfo.DefaultDriveId,
-    "file_id":  file_id,
-    "category": "live_transcoding",
-  }
-  data_json, _ := json.Marshal(data)
-  header := map[string]string{
-    "Content-Type":  "application/json",
-    "origin":        "https://www.aliyundrive.com",
-    "referer":       "https://www.aliyundrive.com",
-    "authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
-  }
-  respByte, _ := y.curl(url, "POST", string(data_json), header)
-  info := map[string]interface{}{}
-  err := json.Unmarshal([]byte(respByte), &info)
-  return info, err
+	url := "https://api.aliyundrive.com/v2/file/get_video_preview_play_info"
+	data := map[string]interface{}{
+		"drive_id": y.RefreshInfo.DefaultDriveId,
+		"file_id":  file_id,
+		"category": "live_transcoding",
+	}
+	data_json, _ := json.Marshal(data)
+	header := map[string]string{
+		"Content-Type":  "application/json",
+		"origin":        "https://www.aliyundrive.com",
+		"referer":       "https://www.aliyundrive.com",
+		"authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
+	}
+	respByte, _ := y.curl(url, "POST", string(data_json), header)
+	info := map[string]interface{}{}
+	err := json.Unmarshal([]byte(respByte), &info)
+	return info, err
 }
 
 func (y *Ali) MultiDownloadUrl(data map[string]interface{}) (map[string]interface{}, error) {
-  url := "https://api.aliyundrive.com/adrive/v1/file/multiDownloadUrl"
-  data_json, _ := json.Marshal(data)
-  header := map[string]string{
-    "Content-Type":  "application/json",
-    "origin":        "https://www.aliyundrive.com",
-    "referer":       "https://www.aliyundrive.com",
-    "authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
-  }
-  respByte, _ := y.curl(url, "POST", string(data_json), header)
-  info := map[string]interface{}{}
-  err := json.Unmarshal([]byte(respByte), &info)
-  return info, err
+	url := "https://api.aliyundrive.com/adrive/v1/file/multiDownloadUrl"
+	data_json, _ := json.Marshal(data)
+	header := map[string]string{
+		"Content-Type":  "application/json",
+		"origin":        "https://www.aliyundrive.com",
+		"referer":       "https://www.aliyundrive.com",
+		"authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
+	}
+	respByte, _ := y.curl(url, "POST", string(data_json), header)
+	info := map[string]interface{}{}
+	err := json.Unmarshal([]byte(respByte), &info)
+	return info, err
 }
 
 func (y *Ali) curl(url string, options ...interface{}) ([]byte, error) {
-  //options -》 method string,data string,hearder map[string]string
-  //获取访问方法
-  method := "GET"
-  if options[0] != nil {
-    method = options[0].(string)
-  }
-  //获取参数
-  data := ""
-  if options[1] != nil {
-    data = options[1].(string)
-  }
-  //获取头
-  header := map[string]string{}
-  if options[2] != nil {
-    header = options[2].(map[string]string)
-  }
-  req, _ := http.NewRequest(method, url, strings.NewReader(data))
-  //设置请求头
-  for key, value := range header {
-    req.Header.Set(key, value)
-  }
-  resp, err := (&http.Client{}).Do(req)
-  if err != nil {
-    return nil, err
-  }
-  defer resp.Body.Close()
-  result, err := ioutil.ReadAll(resp.Body)
-  if err != nil {
-    return nil, err
-  }
-  return result, nil
+	//options -》 method string,data string,hearder map[string]string
+	//获取访问方法
+	method := "GET"
+	if options[0] != nil {
+		method = options[0].(string)
+	}
+	//获取参数
+	data := ""
+	if options[1] != nil {
+		data = options[1].(string)
+	}
+	//获取头
+	header := map[string]string{}
+	if options[2] != nil {
+		header = options[2].(map[string]string)
+	}
+	req, _ := http.NewRequest(method, url, strings.NewReader(data))
+	//设置请求头
+	for key, value := range header {
+		req.Header.Set(key, value)
+	}
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	result, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (y *Ali) Heartbeat() {
-  //var ch chan int
-  //定时任务
-  ticker := time.NewTicker(time.Second * 6500)
-  go func() {
-    for range ticker.C {
-      fmt.Println("心跳启动")
-      //执行
-      //y.Refresh()
-    }
+	//var ch chan int
+	//定时任务
+	ticker := time.NewTicker(time.Second * 6500)
+	go func() {
+		for range ticker.C {
+			fmt.Println("心跳启动")
+			//执行
+			//y.Refresh()
+		}
 
-  }()
+	}()
 
 }
