@@ -6,6 +6,13 @@ type UploadFileRequest struct {
 	File    SizedReader `json:"-"`
 }
 
+type UploadSession struct {
+	DriveID      string     `json:"drive_id"`
+	FileID       string     `json:"file_id"`
+	PartInfoList []PartInfo `json:"part_info_list"`
+	UploadID     string     `json:"upload_id"`
+}
+
 func (y *Ali) UploadFile(req *UploadFileRequest) {
 	var dirent DriveDirentID
 	var parts = []PartInfo{
