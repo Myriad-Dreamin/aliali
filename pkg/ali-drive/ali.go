@@ -4,6 +4,7 @@ package ali_drive
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"github.com/go-resty/resty/v2"
@@ -15,9 +16,10 @@ import (
 )
 
 type Ali struct {
-	client      *resty.Client
-	suppress    suppress.ISuppress
-	accessToken string
+	client       *resty.Client
+	uploadClient *resty.Client
+	suppress     suppress.ISuppress
+	accessToken  string
 
 	RefreshInfo ApiRefreshResponse `json:"refresh_info"`
 	Headers     [][2]string        `json:"headers"`
@@ -26,6 +28,10 @@ type Ali struct {
 func NewAli() *Ali {
 	return &Ali{
 		client: resty.New(),
+		uploadClient: resty.New().SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
+			request.Header.Set("Content-Type", "")
+			return nil
+		}),
 	}
 }
 
@@ -68,8 +74,8 @@ func init() {
 	Yunpan.Heartbeat()
 }
 
-func (y *Ali) r() *resty.Request {
-	req := y.client.R()
+func (y *Ali) r(c *resty.Client) *resty.Request {
+	req := c.R()
 
 	for i := range y.Headers {
 		req.SetHeader(y.Headers[i][0], y.Headers[i][1])
@@ -90,6 +96,10 @@ func Unmarshal(s suppress.ISuppress, d []byte, i interface{}) bool {
 func (y *Ali) processResp(res *resty.Response, err error) []byte {
 	if err != nil {
 		y.suppress.Suppress(err)
+		return nil
+	}
+	if res.StatusCode() >= 300 || res.StatusCode() < 200 {
+		y.suppress.Suppress(errors.New(string(res.Body())))
 		return nil
 	}
 

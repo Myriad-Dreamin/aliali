@@ -21,7 +21,7 @@ type EntryDesc struct {
 func getTemplate(arg EntryDesc, interceptors []string) string {
 	return fmt.Sprintf(`func (y *Ali) %s(reqBody *%s) *%s {
 	url := "%s"
-	req := y.r()%s
+	req := y.r(y.client)%s
 
 	var resp = new(%s)
 	if !y.unmarshal(y.processResp(req.%s(url)), &resp) {
@@ -62,7 +62,7 @@ func main() {
 		}
 		var modifiers, reqHandlers []string
 		modifiers = append(modifiers, `.
-		SetBody(reqBody)`)
+		SetBody(*reqBody)`)
 
 		for _, incName := range v.Interceptors {
 			switch incName {

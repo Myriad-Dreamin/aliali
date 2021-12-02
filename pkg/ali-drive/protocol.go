@@ -93,21 +93,45 @@ type ApiFileCreateWithFoldersRequest struct {
 	CheckNameMode string `json:"check_name_mode"`
 	Type          string `json:"type"`
 
-	PartInfoList    []*PartInfo `json:"part_info_list"`
-	Size            int64       `json:"size"`
-	ContentHash     string      `json:"content_hash"`
-	ContentHashName string      `json:"content_hash_name"`
-	ProofHash       string      `json:"proof_code"`
-	ProofHashName   string      `json:"proof_version"`
+	PartInfoList    []PartInfo `json:"part_info_list"`
+	Size            int64      `json:"size"`
+	ContentHash     string     `json:"content_hash,omitempty"`
+	ContentHashName string     `json:"content_hash_name,omitempty"`
+	ProofHash       string     `json:"proof_code,omitempty"`
+	ProofHashName   string     `json:"proof_version,omitempty"`
 }
 
 type ApiFileCreateWithFoldersResponse struct {
 	DriveDirentID
 
-	Message      string `json:"message"`
-	ParentFileID string `json:"parent_file_id"`
-	Type         string `json:"type"`
-	DomainID     string `json:"domain_id"`
-	FileName     string `json:"file_name"`
-	EncryptMode  string `json:"encrypt_mode"`
+	PartInfoList []PartInfo `json:"part_info_list"`
+	Message      string     `json:"message"`
+	ParentFileID string     `json:"parent_file_id"`
+	UploadID     string     `json:"upload_id"`
+	Type         string     `json:"type"`
+	DomainID     string     `json:"domain_id"`
+	FileName     string     `json:"file_name"`
+	EncryptMode  string     `json:"encrypt_mode"`
+}
+
+type ApiFileGetListRequest struct {
+	GetAll                bool   `json:"get_all"`
+	DriveID               string `json:"drive_id"`
+	ParentFileID          string `json:"parent_file_id"`
+	Marker                string `json:"marker"`
+	Limit                 int    `json:"limit"`
+	All                   bool   `json:"all"`
+	URLExpireSec          int    `json:"url_expire_sec"`
+	ImageThumbnailProcess string `json:"image_thumbnail_process"`
+	ImageURLProcess       string `json:"image_url_process"`
+	VideoThumbnailProcess string `json:"video_thumbnail_process"`
+	Fields                string `json:"fields"`
+	OrderBy               string `json:"order_by"`
+	OrderDirection        string `json:"order_direction"`
+}
+
+type ApiFileGetListResponse struct {
+	Message    string  `json:"message"`
+	Items      []*File `json:"items"`
+	NextMarker string  `json:"next_marker"`
 }

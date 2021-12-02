@@ -33,3 +33,8 @@ FileCreateWithFolders:
   Url: https://api.aliyundrive.com/adrive/v2/file/createWithFolders
   Interceptors:
     - Auth
+FileGetList:
+  Method: Post
+  Url: https://api.aliyundrive.com/adrive/v3/file/list
+  Interceptors:
+    - Auth

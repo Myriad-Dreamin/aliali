@@ -29,7 +29,7 @@ type ApiRefreshResponse struct {
 
 func (y *Ali) Refresh(refreshToken string) *ApiRefreshResponse {
 	url := "https://auth.aliyundrive.com/v2/account/token"
-	req := y.r().
+	req := y.r(y.client).
 		SetBody(AliRefreshRequest{
 			GrantType:    "refresh_token",
 			RefreshToken: refreshToken,
