@@ -1,5 +1,7 @@
 package ali_drive
 
+//go:generate go run ./generate api.def.yaml
+
 import (
 	"encoding/json"
 	"fmt"
@@ -13,14 +15,12 @@ import (
 )
 
 type Ali struct {
-	client   *resty.Client
-	suppress suppress.ISuppress
+	client      *resty.Client
+	suppress    suppress.ISuppress
+	accessToken string
 
-	UserInfo    UserInfo           `json:"user_info"`
 	RefreshInfo ApiRefreshResponse `json:"refresh_info"`
-	DataItems   DataItems          `json:"items"`
 	Headers     [][2]string        `json:"headers"`
-	DownloadUrl DataItem           `json:"downloadUrl"`
 }
 
 func NewAli() *Ali {
@@ -29,24 +29,8 @@ func NewAli() *Ali {
 	}
 }
 
-type UserInfo struct {
-	Avatar         string `json:"avatar"`
-	CreatedAt      string `json:"created_at"`
-	DefaultDriveId string `json:"default_drive_id"`
-	Description    string `json:"description"`
-	DomainId       string `json:"domain_id"`
-	Email          string `json:"email"`
-	NickName       string `json:"nick_name"`
-	UserId         string `json:"user_id"`
-	UserName       string `json:"user_name"`
-}
-
-type RefreshUserData struct {
-}
-
-type DataItems struct {
-	Item       []DataItem `json:"items"`
-	NextMarker string     `json:"next_marker"`
+func (y *Ali) SetAccessToken(s string) {
+	y.accessToken = s
 }
 
 type DataItem struct {
@@ -126,21 +110,8 @@ func (y *Ali) unmarshal(b []byte, i interface{}) bool {
 	return true
 }
 
-func (y *Ali) GetList(data map[string]interface{}) (DataItems, error) {
-	url := "https://api.aliyundrive.com/v2/file/list"
-	data_json, _ := json.Marshal(data)
-	header := map[string]string{
-		"Content-Type":  "application/json;charset=UTF-8",
-		"origin":        "https://www.aliyundrive.com",
-		"referer":       "https://www.aliyundrive.com",
-		"authorization": y.RefreshInfo.TokenType + " " + y.RefreshInfo.AccessToken,
-	}
-
-	respByte, _ := y.curl(url, "POST", string(data_json), header)
-	fmt.Println(string(respByte))
-	list := y.DataItems
-	err := json.Unmarshal([]byte(respByte), &list)
-	return list, err
+func (y *Ali) setAuthHeader(req *resty.Request) {
+	req.SetHeader("authorization", y.accessToken)
 }
 
 func (y *Ali) GetDownloadUrl(file_id string) (DataItem, error) {

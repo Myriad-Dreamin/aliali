@@ -1,0 +1,35 @@
+FileCreateWithProof:
+  Method: Post
+  Url: https://api.aliyundrive.com/v2/file/create_with_proof
+  Interceptors:
+    - Auth
+FileUploadComplete:
+  Method: Post
+  Url: https://api.aliyundrive.com/v2/file/complete
+  Interceptors:
+    - Auth
+FileSearch:
+  Method: Post
+  Url: https://api.aliyundrive.com/adrive/v3/file/search
+  Interceptors:
+    - Auth
+FileGetById:
+  Method: Post
+  Url: https://api.aliyundrive.com/v2/file/get
+  Interceptors:
+    - Auth
+FileGetPathById:
+  Method: Post
+  Url: https://api.aliyundrive.com/adrive/v1/file/get_path
+  Interceptors:
+    - Auth
+FileDeleteById:
+  Method: Post
+  Url: https://api.aliyundrive.com/v2/recyclebin/trash
+  Interceptors:
+    - Auth
+FileCreateWithFolders:
+  Method: Post
+  Url: https://api.aliyundrive.com/adrive/v2/file/createWithFolders
+  Interceptors:
+    - Auth
