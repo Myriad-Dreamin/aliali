@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/Myriad-Dreamin/aliali/database"
@@ -51,4 +52,19 @@ func main() {
 
 	b := m.Get(s)
 	fmt.Println(b.RefreshToken, b.TokenType, b.AccessToken)
+
+	ali.SetAccessToken(fmt.Sprintf("%s %s", b.TokenType, b.AccessToken))
+
+	var mockFile = bytes.NewBuffer(nil)
+	mockFile.WriteString("test2")
+	var uploadingFile = ali_drive.SizedReader{
+		Reader: mockFile,
+		Size:   int64(mockFile.Len()),
+	}
+
+	ali.UploadFile(&ali_drive.UploadFileRequest{
+		DriveID: cfg.AliDrive.DriveId,
+		Name:    "test/test2.txt",
+		File:    uploadingFile,
+	})
 }

@@ -1,6 +1,14 @@
 package ali_drive
 
-import "time"
+import (
+	"io"
+	"time"
+)
+
+type SizedReader struct {
+	io.Reader `json:"-"`
+	Size      int64 `json:"size"`
+}
 
 type DriveDirentID struct {
 	DriveID string `json:"drive_id"`
