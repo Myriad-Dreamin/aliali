@@ -24,6 +24,7 @@ func (model *AliAuthModel) Get(s suppress.ISuppress) *ali_drive.ApiAcquireTokenR
 	e := json.Unmarshal(model.Raw, &model.memory)
 	if e != nil {
 		s.Suppress(e)
+		return nil
 	}
 
 	return model.memory
