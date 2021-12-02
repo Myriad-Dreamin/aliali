@@ -37,7 +37,7 @@ func main() {
 	var c = database.DB{}
 	m := &model.AliAuthModel{Key: "primary"}
 
-	if !c.FindAuthModelByKey(db, m) {
+	if !c.FindAuthModelByKey(db, m) || m.ExpiresLocal <= time.Now().Unix() {
 
 		info := ali.Refresh(cfg.AliDrive.RefreshToken)
 
@@ -46,7 +46,7 @@ func main() {
 
 		m.Raw = b
 		m.ExpiresLocal = time.Now().Unix() + int64(info.ExpiresIn)
-		db.Create(m)
+		c.SaveAuthModel(db, m)
 	}
 
 	b := m.Get(s)
