@@ -1,3 +1,6 @@
+AcquireToken:
+  Method: Post
+  Url: https://auth.aliyundrive.com/v2/account/token
 FileCreateWithProof:
   Method: Post
   Url: https://api.aliyundrive.com/v2/file/create_with_proof

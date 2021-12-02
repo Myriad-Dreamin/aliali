@@ -39,7 +39,7 @@ func main() {
 
 	if !c.FindAuthModelByKey(db, m) || m.ExpiresLocal <= time.Now().Unix() {
 
-		info := ali.Refresh(cfg.AliDrive.RefreshToken)
+		info := ali.RefreshToken(cfg.AliDrive.RefreshToken)
 
 		b, err := json.Marshal(info)
 		s.Suppress(err)

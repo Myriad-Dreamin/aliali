@@ -13,10 +13,10 @@ type AliAuthModel struct {
 	ExpiresLocal int64
 	Raw          []byte
 
-	memory *ali_drive.ApiRefreshResponse
+	memory *ali_drive.ApiAcquireTokenResponse
 }
 
-func (model *AliAuthModel) Get(s suppress.ISuppress) *ali_drive.ApiRefreshResponse {
+func (model *AliAuthModel) Get(s suppress.ISuppress) *ali_drive.ApiAcquireTokenResponse {
 	if model.memory != nil {
 		return model.memory
 	}
