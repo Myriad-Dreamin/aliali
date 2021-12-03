@@ -1,15 +1,18 @@
-package main
+package dispatcher
 
 import (
 	"github.com/Myriad-Dreamin/aliali/database"
+	"github.com/Myriad-Dreamin/aliali/dispatcher/service"
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"gorm.io/gorm"
+	"log"
+	"os"
 )
 
-type Worker struct {
+type Dispatcher struct {
 	configPath string
 	dbPath     string
 
@@ -23,15 +26,16 @@ type Worker struct {
 	db        *gorm.DB
 	xdb       *database.DB
 	notifier  ali_notifier.INotifier
+	logger    *log.Logger
 
 	fileUploads  chan *ali_notifier.FsUploadRequest
-	serviceQueue chan IService
+	serviceQueue chan service.IService
 }
 
-type Option = func(w *Worker) *Worker
+type Option = func(w *Dispatcher) *Dispatcher
 
 func MockDB() Option {
-	return func(w *Worker) *Worker {
+	return func(w *Dispatcher) *Dispatcher {
 		w.db = w.openMock()
 		if w.db == nil {
 			return nil
@@ -41,36 +45,36 @@ func MockDB() Option {
 }
 
 func WithConfigPath(cfgPath string) Option {
-	return func(w *Worker) *Worker {
+	return func(w *Dispatcher) *Dispatcher {
 		w.configPath = cfgPath
 		return w
 	}
 }
 
 func WithDBPath(dbPath string) Option {
-	return func(w *Worker) *Worker {
+	return func(w *Dispatcher) *Dispatcher {
 		w.dbPath = dbPath
 		return w
 	}
 }
 
 func WithConfig(cfg *ali_notifier.Config) Option {
-	return func(w *Worker) *Worker {
+	return func(w *Dispatcher) *Dispatcher {
 		w.cfg = cfg
 		return w
 	}
 }
 
 func WithNotifier(notifier ali_notifier.INotifier) Option {
-	return func(w *Worker) *Worker {
+	return func(w *Dispatcher) *Dispatcher {
 		w.notifier = notifier
 		return w
 	}
 }
 
-func WithServiceReplicate(services ...IService) Option {
-	return func(w *Worker) *Worker {
-		w.serviceQueue = make(chan IService, len(services))
+func WithServiceReplicate(services ...service.IService) Option {
+	return func(w *Dispatcher) *Dispatcher {
+		w.serviceQueue = make(chan service.IService, len(services))
 		for i := range services {
 			w.serviceQueue <- services[i]
 		}
@@ -78,14 +82,14 @@ func WithServiceReplicate(services ...IService) Option {
 	}
 }
 
-func NewWorker(options ...Option) *Worker {
+func NewDispatcher(options ...Option) *Dispatcher {
 	s := suppress.PanicAll{}
 
 	var httpHeaders [][2]string
 	httpHeaders = append(httpHeaders, [2]string{"origin", "https://aliyundrive.com"})
 	httpHeaders = append(httpHeaders, [2]string{"referer", "https://aliyundrive.com"})
 
-	var w = &Worker{
+	var w = &Dispatcher{
 		s:           s,
 		fileUploads: make(chan *ali_notifier.FsUploadRequest, 10),
 		httpHeaders: httpHeaders,
@@ -105,6 +109,9 @@ func NewWorker(options ...Option) *Worker {
 		}
 		w.cfg = w.syncConfig()
 	}
+	if w.logger == nil {
+		w.logger = log.New(os.Stderr, "[dispatcher] ", log.LUTC|log.Llongfile)
+	}
 	if w.db == nil {
 		if len(w.dbPath) == 0 {
 			w.dbPath = DefaultDatabasePath
@@ -112,17 +119,21 @@ func NewWorker(options ...Option) *Worker {
 		w.db = w.openDB()
 	}
 	if w.serviceQueue == nil {
-		w.serviceQueue = make(chan IService, 1)
-		w.serviceQueue <- &Service{}
+		w.serviceQueue = make(chan service.IService, 1)
+		w.serviceQueue <- &service.UploadImpl{
+			Logger: log.New(os.Stderr, "[service] ", log.LUTC|log.Llongfile),
+		}
 	}
 	if w.xdb == nil {
 		w.xdb = &database.DB{ISuppress: w.s}
 	}
 	if w.notifier == nil {
-		w.notifier = &ali_notifier.BiliRecorderNotifier{}
+		w.notifier = &ali_notifier.HttpRecorderNotifier{
+			CapturePath: "/rec",
+		}
 	}
 
-	if w.ali == nil || w.db == nil || w.cfg == nil ||
+	if w.ali == nil || w.db == nil || w.cfg == nil || w.logger == nil ||
 		w.serviceQueue == nil || w.xdb == nil || w.notifier == nil {
 		return nil
 	}

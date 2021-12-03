@@ -18,9 +18,10 @@ type Ali struct {
 	Headers      [][2]string `json:"headers"`
 }
 
-func NewAli() *Ali {
+func NewAli(suppress suppress.ISuppress) *Ali {
 	return &Ali{
-		client: resty.New(),
+		client:   resty.New(),
+		suppress: suppress,
 		uploadClient: resty.New().SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
 			request.Header.Set("Content-Type", "")
 			return nil

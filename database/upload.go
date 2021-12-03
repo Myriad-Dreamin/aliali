@@ -8,7 +8,24 @@ import (
 )
 
 func (s *DB) FindUploadRequest(db *gorm.DB, req *model.UploadModel) bool {
-	e := db.Where(req).First(req)
+	e := db.Where(model.UploadModel{
+		DriveID:    req.DriveID,
+		RemotePath: req.RemotePath,
+		LocalPath:  req.LocalPath,
+	}).First(req)
+	if e.Error == gorm.ErrRecordNotFound {
+		return false
+	} else if e.Error != nil {
+		s.Suppress(e.Error)
+	}
+
+	return true
+}
+
+func (s *DB) FindMatchedStatusRequest(db *gorm.DB, req *model.UploadModel, st int) bool {
+	e := db.Where(model.UploadModel{
+		Status: st,
+	}).First(req)
 	if e.Error == gorm.ErrRecordNotFound {
 		return false
 	} else if e.Error != nil {
@@ -95,7 +112,7 @@ func (s *DB) TransitUploadStatusT(
 
 		// commit
 		if x.Status != st {
-			e = tx.Model(&x).Update("status", st)
+			e = tx.Model(&x).Debug().Update("status", st)
 			if e.Error == gorm.ErrRecordNotFound {
 				s.WarnOnce(e.Error)
 				return nil

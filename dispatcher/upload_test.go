@@ -1,7 +1,8 @@
-package main
+package dispatcher
 
 import (
 	"errors"
+	"github.com/Myriad-Dreamin/aliali/dispatcher/service"
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
@@ -22,10 +23,10 @@ func (m *MapRmRs) Remove(s string) error {
 func TestUpload(t *testing.T) {
 	var notifier = &ali_notifier.Notifier{}
 
-	var worker = NewWorker(
+	var dispatcher = NewDispatcher(
 		MockDB(),
 		WithNotifier(notifier),
-		WithServiceReplicate(&MockService{}),
+		WithServiceReplicate(&service.MockService{}),
 		WithConfig(&ali_notifier.Config{
 			Version: "aliyunpan/v1beta",
 			AliDrive: ali_notifier.AliDriveConfig{
@@ -47,7 +48,7 @@ func TestUpload(t *testing.T) {
 	content := []byte("123")
 	var x = NewBytesRandReader(content)
 
-	err := worker.serveUploadRequest(&MapRmRs{map[string]*fstest.MapFile{
+	err := dispatcher.serveUploadRequest(&MapRmRs{map[string]*fstest.MapFile{
 		"test": {
 			Mode:    0644,
 			ModTime: time.Time{},
@@ -72,15 +73,15 @@ func TestUpload(t *testing.T) {
 	}
 
 	// drain work
-	svc := <-worker.serviceQueue
-	worker.serviceQueue <- svc
+	svc := <-dispatcher.serviceQueue
+	dispatcher.serviceQueue <- svc
 
 	var m = &model.UploadModel{
 		DriveID:    fsReq.DriveID,
 		RemotePath: fsReq.RemotePath,
 		LocalPath:  fsReq.LocalPath,
 	}
-	if !worker.xdb.FindUploadRequest(worker.db, m) {
+	if !dispatcher.xdb.FindUploadRequest(dispatcher.db, m) {
 		t.Error(errors.New("req not found"))
 	}
 

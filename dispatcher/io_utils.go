@@ -1,4 +1,4 @@
-package main
+package dispatcher
 
 import (
 	"bytes"
@@ -102,7 +102,7 @@ func (o osFs) Remove(s string) error {
 }
 
 func realFs() FsClearInterface {
-	return osFs{"/", os.DirFS("/")}
+	return osFs{"/", os.DirFS("")}
 }
 
 type ignoreFs struct {

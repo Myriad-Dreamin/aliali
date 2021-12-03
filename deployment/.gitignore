@@ -1,0 +1,4 @@
+config.json
+docker-compose.yaml
+*-workdir
+bin
