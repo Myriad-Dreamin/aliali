@@ -10,6 +10,8 @@ import (
 )
 
 type Worker struct {
+	configPath string
+
 	cfg         *ali_notifier.Config
 	auth        *model.AliAuthModel
 	httpHeaders [][2]string
@@ -33,6 +35,13 @@ func MockDB() Option {
 		if w.db == nil {
 			return nil
 		}
+		return w
+	}
+}
+
+func WithConfigPath(cfgPath string) Option {
+	return func(w *Worker) *Worker {
+		w.configPath = cfgPath
 		return w
 	}
 }
@@ -83,6 +92,9 @@ func NewWorker(options ...Option) *Worker {
 
 	w.ali = w.makeAliClient()
 	if w.cfg == nil {
+		if len(w.configPath) == 0 {
+			w.configPath = DefaultConfigPath
+		}
 		w.cfg = w.syncConfig()
 	}
 	if w.db == nil {

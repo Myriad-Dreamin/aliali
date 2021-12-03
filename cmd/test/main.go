@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	DefaultChunkSize = 1048576
+	DefaultChunkSize  = 1048576
+	DefaultConfigPath = "config.yaml"
 )
 
 func (w *Worker) loop() {

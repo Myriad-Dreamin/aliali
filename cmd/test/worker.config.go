@@ -26,7 +26,7 @@ func (w *Worker) authExpired() bool {
 }
 
 func (w *Worker) syncConfig() *ali_notifier.Config {
-	f, err := os.OpenFile("config.yaml", os.O_RDONLY, 0644)
+	f, err := os.OpenFile(w.configPath, os.O_RDONLY, 0644)
 	if err != nil {
 		w.s.Suppress(err)
 		return nil
