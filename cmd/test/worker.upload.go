@@ -3,19 +3,13 @@ package main
 import (
 	"context"
 	"github.com/Myriad-Dreamin/aliali/model"
+	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"os"
 )
 
-type FsUploadRequest struct {
-	TransactionID uint64
-
-	LocalPath  string
-	RemotePath string
-}
-
 func (w *Worker) serveUploadRequest(
-	ifs FsClearInterface, req *FsUploadRequest, uploadReq IUploadRequest) error {
-	if !w.transitUploadStatus(ifs, req, model.UploadStatusInitialized, model.UploadStatusUploading) {
+	ifs FsClearInterface, req *ali_notifier.FsUploadRequest, uploadReq IUploadRequest) error {
+	if !w.xdb.TransitUploadStatus(w.db, ifs, req, model.UploadStatusInitialized, model.UploadStatusUploading) {
 		return nil
 	}
 
@@ -30,7 +24,7 @@ func (w *Worker) serveUploadRequest(
 		// handle error after returning worker
 		// we leverage the bottom half of this coroutine to process an upload response
 		if resp.Code == 0 {
-			if w.transitUploadStatus(ifs, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
+			if w.xdb.TransitUploadStatus(w.db, ifs, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
 				w.checkUploadAndClear(ifs, req)
 			}
 		} else if resp.Err != nil {
@@ -40,7 +34,7 @@ func (w *Worker) serveUploadRequest(
 	return nil
 }
 
-func (w *Worker) serveFsUploadRequest(req *FsUploadRequest) error {
+func (w *Worker) serveFsUploadRequest(req *ali_notifier.FsUploadRequest) error {
 	o, err := os.OpenFile(req.LocalPath, os.O_RDONLY, 0644)
 	if err != nil {
 		return err

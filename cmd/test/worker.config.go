@@ -14,7 +14,7 @@ func (w *Worker) chunkSize() int64 {
 	}
 
 	if cs, err := strconv.ParseInt(w.cfg.AliDrive.ChunkSize, 10, 64); err != nil {
-		w.warnOnce(err)
+		w.s.WarnOnce(err)
 		return DefaultChunkSize
 	} else {
 		return cs

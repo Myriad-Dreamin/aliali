@@ -1,7 +1,6 @@
 package suppress
 
 type ISuppress interface {
-  Suppress(err error)
+	Suppress(err error)
+	WarnOnce(err error)
 }
-
-

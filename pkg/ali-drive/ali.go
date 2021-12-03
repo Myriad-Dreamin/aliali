@@ -5,7 +5,6 @@ package ali_drive
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"github.com/go-resty/resty/v2"
 	"net/http"

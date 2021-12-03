@@ -38,7 +38,7 @@ func TestUpload(t *testing.T) {
 			Mode:    0644,
 			ModTime: time.Time{},
 		},
-	}}, &FsUploadRequest{
+	}}, &ali_notifier.FsUploadRequest{
 		TransactionID: 1,
 		LocalPath:     "test",
 		RemotePath:    "remove/test",

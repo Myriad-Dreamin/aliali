@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Myriad-Dreamin/aliali/model"
+	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"io/fs"
 	"os"
 )
@@ -11,8 +12,8 @@ type FsClearInterface interface {
 	Remove(path string) error
 }
 
-func (w *Worker) checkUploadAndClear(operating FsClearInterface, req *FsUploadRequest) {
-	w.fileUploadStatusTransition(operating, req, func(req *FsUploadRequest, status int) (targetStatus int, e error) {
+func (w *Worker) checkUploadAndClear(operating FsClearInterface, req *ali_notifier.FsUploadRequest) {
+	w.xdb.TransitUploadStatusT(w.db, operating, req, func(req *ali_notifier.FsUploadRequest, status int) (targetStatus int, e error) {
 		if status != model.UploadStatusUploaded {
 			return
 		}

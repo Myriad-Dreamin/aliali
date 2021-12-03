@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Myriad-Dreamin/aliali/database"
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
@@ -17,8 +18,9 @@ type Worker struct {
 	authedAli *ali_drive.Ali
 	s         suppress.ISuppress
 	db        *gorm.DB
+	xdb       *database.DB
 
-	fileUploads  chan *FsUploadRequest
+	fileUploads  chan *ali_notifier.FsUploadRequest
 	serviceQueue chan IService
 }
 
@@ -60,7 +62,7 @@ func NewWorker(options ...Option) *Worker {
 
 	var w = &Worker{
 		s:           s,
-		fileUploads: make(chan *FsUploadRequest, 10),
+		fileUploads: make(chan *ali_notifier.FsUploadRequest, 10),
 		httpHeaders: httpHeaders,
 	}
 
@@ -82,14 +84,13 @@ func NewWorker(options ...Option) *Worker {
 		w.serviceQueue = make(chan IService, 1)
 		w.serviceQueue <- &Service{}
 	}
+	if w.xdb == nil {
+		w.xdb = &database.DB{ISuppress: w.s}
+	}
 
-	if w.ali == nil || w.db == nil || w.cfg == nil || w.serviceQueue == nil {
+	if w.ali == nil || w.db == nil || w.cfg == nil || w.serviceQueue == nil || w.xdb == nil {
 		return nil
 	}
 
 	return w
-}
-
-func (w *Worker) warnOnce(err error) {
-	w.s.Suppress(err)
 }
