@@ -35,6 +35,24 @@ func (s *DB) SaveUploadRequest(db *gorm.DB, model *model.UploadModel) {
 	return
 }
 
+func (s *DB) SaveUploadSession(db *gorm.DB, model *model.UploadModel) bool {
+	if model.ID == 0 {
+		if !s.FindUploadRequest(db, model) {
+			return false
+		} else {
+			db = db.Update("raw", model.Raw)
+		}
+	} else {
+		db = db.Update("raw", model.Raw)
+	}
+	if db.Error != nil {
+		s.Suppress(db.Error)
+		return false
+	}
+
+	return true
+}
+
 func (s *DB) TransitUploadStatus(
 	db *gorm.DB, req *ali_notifier.FsUploadRequest, fr, to int) bool {
 	return s.TransitUploadStatusT(db, req, func(req *ali_notifier.FsUploadRequest, status int) (target int, err error) {

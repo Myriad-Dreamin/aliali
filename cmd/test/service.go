@@ -16,7 +16,7 @@ type UploadResponse struct {
 }
 
 type IUploadRequest interface {
-	DriverID() string
+	Session() *ali_drive.UploadSession
 	FileName() string
 
 	Size() int64
@@ -27,11 +27,16 @@ type IUploadRequest interface {
 }
 
 type IUploadAliView interface {
-	UploadFile(req *ali_drive.UploadFileRequest)
+	UploadFile(req *ali_drive.UploadFileRequest) bool
 }
 
 type Service struct {
 }
+
+const (
+	UploadOK int = iota
+	UploadCancelled
+)
 
 func (svc *Service) Upload(context context.Context, ali IUploadAliView, req IUploadRequest) *UploadResponse {
 	var uploadingFile = ali_drive.SizedReader{
@@ -39,13 +44,17 @@ func (svc *Service) Upload(context context.Context, ali IUploadAliView, req IUpl
 		Size:   req.Size(),
 	}
 
-	ali.UploadFile(&ali_drive.UploadFileRequest{
-		DriveID: req.DriverID(),
+	var ses = req.Session()
+	if !ali.UploadFile(&ali_drive.UploadFileRequest{
+		DriveID: ses.DriveDirentID.DriveID,
 		Name:    req.FileName(),
 		File:    uploadingFile,
-	})
+		Session: ses,
+	}) {
+		return &UploadResponse{Code: UploadCancelled}
+	}
 
-	return &UploadResponse{Code: 0}
+	return &UploadResponse{Code: UploadOK}
 }
 
 type MockService struct {

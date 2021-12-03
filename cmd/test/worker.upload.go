@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/Myriad-Dreamin/aliali/model"
+	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"os"
 )
@@ -28,7 +29,8 @@ func (w *Worker) serveUploadRequest(
 
 		// handle error after returning worker
 		// we leverage the bottom half of this coroutine to process an upload response
-		if resp.Code == 0 {
+		switch resp.Code {
+		case UploadOK:
 			if !w.ensureFsFileExists(ifs, req.LocalPath) {
 				returnService()
 				return
@@ -36,8 +38,21 @@ func (w *Worker) serveUploadRequest(
 			if w.xdb.TransitUploadStatus(w.db, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
 				w.checkUploadAndClear(ifs, req)
 			}
-		} else if resp.Err != nil {
-			w.s.Suppress(resp.Err)
+		case UploadCancelled:
+			var m = &model.UploadModel{
+				ID:         req.TransactionID,
+				DriveID:    req.DriveID,
+				RemotePath: req.RemotePath,
+				LocalPath:  req.LocalPath,
+			}
+
+			if m.Set(w.s, uploadReq.Session()) {
+				w.xdb.SaveUploadSession(w.db, m)
+			}
+		default:
+			if resp.Err != nil {
+				w.s.Suppress(resp.Err)
+			}
 		}
 		returnService()
 	}()
@@ -58,7 +73,13 @@ func (w *Worker) serveFsUploadRequest(req *ali_notifier.FsUploadRequest) error {
 	uploadReq := &RandReaderUploadRequest{
 		BaseUploadRequest: BaseUploadRequest{
 			// multiple drive?
-			XDriverID:  w.cfg.AliDrive.DriveId,
+			XSession: &ali_drive.UploadSession{
+				DriveDirentID: ali_drive.DriveDirentID{
+					DriveID: w.cfg.AliDrive.DriveId,
+				},
+				PartInfoList: nil,
+				UploadID:     "",
+			},
 			XFileName:  req.RemotePath,
 			XSize:      st.Size(),
 			XChunkHint: w.chunkSize(),

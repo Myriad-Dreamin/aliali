@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"io"
 	"io/fs"
@@ -38,14 +39,14 @@ func NewBytesRandReader(b []byte) RandReadCloser {
 }
 
 type BaseUploadRequest struct {
-	XDriverID  string
+	XSession   *ali_drive.UploadSession
 	XFileName  string
 	XSize      int64
 	XChunkHint int64
 }
 
-func (b *BaseUploadRequest) DriverID() string {
-	return b.XDriverID
+func (b *BaseUploadRequest) Session() *ali_drive.UploadSession {
+	return b.XSession
 }
 
 func (b *BaseUploadRequest) FileName() string {

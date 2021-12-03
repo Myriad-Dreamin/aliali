@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"github.com/Myriad-Dreamin/aliali/model"
+	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"testing"
@@ -53,7 +54,11 @@ func TestUpload(t *testing.T) {
 		},
 	}}, fsReq, &RandReaderUploadRequest{
 		BaseUploadRequest: BaseUploadRequest{
-			XDriverID:  "456",
+			XSession: &ali_drive.UploadSession{
+				DriveDirentID: ali_drive.DriveDirentID{
+					DriveID: "456",
+				},
+			},
 			XFileName:  "test",
 			XSize:      int64(len(content)),
 			XChunkHint: 1024,

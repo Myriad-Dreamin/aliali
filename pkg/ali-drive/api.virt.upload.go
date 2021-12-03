@@ -1,24 +1,26 @@
 package ali_drive
 
 type UploadFileRequest struct {
-	DriveID string      `json:"drive_id"`
-	Name    string      `json:"name"`
-	File    SizedReader `json:"-"`
+	DriveID string         `json:"drive_id"`
+	Name    string         `json:"name"`
+	File    SizedReader    `json:"-"`
+	Session *UploadSession `json:"session"`
 }
 
 type UploadSession struct {
-	DriveID      string     `json:"drive_id"`
-	FileID       string     `json:"file_id"`
-	PartInfoList []PartInfo `json:"part_info_list"`
-	UploadID     string     `json:"upload_id"`
+	DriveDirentID DriveDirentID `json:"dirent_id"`
+	PartInfoList  []PartInfo    `json:"part_info_list"`
+	UploadID      string        `json:"upload_id"`
 }
 
-func (y *Ali) UploadFile(req *UploadFileRequest) {
-	var dirent DriveDirentID
-	var parts = []PartInfo{
-		{PartNumber: 1},
+func (y *Ali) UploadFile(req *UploadFileRequest) bool {
+	if req.Session == nil {
+		req.Session = &UploadSession{}
 	}
-	var uploadId string
+
+	if req.Session.PartInfoList == nil {
+		req.Session.PartInfoList = []PartInfo{{PartNumber: 1}}
+	}
 
 	// create file uploading proof
 	{
@@ -28,20 +30,20 @@ func (y *Ali) UploadFile(req *UploadFileRequest) {
 			Name:          req.Name,
 			CheckNameMode: "auto_rename",
 			Type:          "file",
-			PartInfoList:  parts,
+			PartInfoList:  req.Session.PartInfoList,
 			Size:          req.File.Size,
 		}
 		resp := y.FileCreateWithFolders(subReq)
-		dirent = resp.DriveDirentID
-		uploadId = resp.UploadID
-		parts = resp.PartInfoList
+		req.Session.DriveDirentID = resp.DriveDirentID
+		req.Session.UploadID = resp.UploadID
+		req.Session.PartInfoList = resp.PartInfoList
 	}
 
 	// upload parts
 	{
 		var subReq = &ApiFileUploadPartRequest{}
-		for i := range parts {
-			subReq.Uri = parts[i].UploadURL
+		for i := range req.Session.PartInfoList {
+			subReq.Uri = req.Session.PartInfoList[i].UploadURL
 			subReq.Reader = req.File
 			y.FileUploadPart(subReq)
 		}
@@ -50,9 +52,11 @@ func (y *Ali) UploadFile(req *UploadFileRequest) {
 	// send complete request
 	{
 		var subReq = &ApiFileUploadCompleteRequest{
-			DriveDirentID: dirent,
-			UploadID:      uploadId,
+			DriveDirentID: req.Session.DriveDirentID,
+			UploadID:      req.Session.UploadID,
 		}
 		y.FileUploadComplete(subReq)
 	}
+
+	return true
 }

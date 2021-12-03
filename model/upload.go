@@ -28,7 +28,7 @@ type UploadModel struct {
 	DriveID    string
 	RemotePath string
 	LocalPath  string
-	Raw        []byte
+	Raw        []byte `gorm:"column:status"`
 
 	uploadData *ali_drive.UploadSession
 }
@@ -45,4 +45,16 @@ func (model *UploadModel) Get(s suppress.ISuppress) *ali_drive.UploadSession {
 	}
 
 	return model.uploadData
+}
+
+func (model *UploadModel) Set(s suppress.ISuppress, session *ali_drive.UploadSession) bool {
+	b, e := json.Marshal(&session)
+	if e != nil {
+		s.Suppress(e)
+		return false
+	}
+
+	model.Raw = b
+	model.uploadData = session
+	return true
 }
