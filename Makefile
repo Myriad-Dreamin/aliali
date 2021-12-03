@@ -1,4 +1,4 @@
 
 build:
-	go build -o deployment/bin/notifier ./cmd/notifier
-	cd deployment && docker build -t myriaddreamin/bilibili-notifier:latest .
+	go build -o docker/bin/notifier ./cmd/notifier
+	cd docker && docker build -t myriaddreamin/bilibili-notifier:latest .
