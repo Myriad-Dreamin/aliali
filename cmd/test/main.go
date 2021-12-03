@@ -1,70 +1,24 @@
 package main
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"github.com/Myriad-Dreamin/aliali/database"
-	"github.com/Myriad-Dreamin/aliali/model"
-	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
-	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
-	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
-	yaml "gopkg.in/yaml.v2"
-	"gorm.io/driver/sqlite"
-	_ "gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"os"
-	"time"
+const (
+	DefaultChunkSize = 1048576
 )
 
+func (w *Worker) loop() {
+	for {
+		select {
+		case req := <-w.fileUploads:
+			if w.authExpired() {
+				w.refreshAuth()
+			}
+			if err := w.serveFsUploadRequest(req); err != nil {
+				w.s.Suppress(err)
+			}
+		}
+	}
+}
+
 func main() {
-	ali := ali_drive.NewAli()
-	s := suppress.PanicAll{}
-
-	f, err := os.OpenFile("config.yaml", os.O_RDONLY, 0644)
-	s.Suppress(err)
-
-	var cfg ali_notifier.Config
-	s.Suppress(yaml.NewDecoder(f).Decode(&cfg))
-
-	ali.Headers = append(ali.Headers, [2]string{"origin", "https://aliyundrive.com"})
-	ali.Headers = append(ali.Headers, [2]string{"referer", "https://aliyundrive.com"})
-
-	db, err := gorm.Open(sqlite.Open("ali.db"))
-	s.Suppress(err)
-
-	s.Suppress(db.AutoMigrate(&model.AliAuthModel{}))
-
-	var c = database.DB{}
-	m := &model.AliAuthModel{Key: "primary"}
-
-	if !c.FindAuthModelByKey(db, m) || m.ExpiresLocal <= time.Now().Unix() {
-
-		info := ali.RefreshToken(cfg.AliDrive.RefreshToken)
-
-		b, err := json.Marshal(info)
-		s.Suppress(err)
-
-		m.Raw = b
-		m.ExpiresLocal = time.Now().Unix() + int64(info.ExpiresIn)
-		c.SaveAuthModel(db, m)
-	}
-
-	b := m.Get(s)
-	fmt.Println(b.RefreshToken, b.TokenType, b.AccessToken)
-
-	ali.SetAccessToken(fmt.Sprintf("%s %s", b.TokenType, b.AccessToken))
-
-	var mockFile = bytes.NewBuffer(nil)
-	mockFile.WriteString("test2")
-	var uploadingFile = ali_drive.SizedReader{
-		Reader: mockFile,
-		Size:   int64(mockFile.Len()),
-	}
-
-	ali.UploadFile(&ali_drive.UploadFileRequest{
-		DriveID: cfg.AliDrive.DriveId,
-		Name:    "test/test2.txt",
-		File:    uploadingFile,
-	})
+	//var mockFile = bytes.NewBuffer(nil)
+	//mockFile.WriteString("test2")
 }

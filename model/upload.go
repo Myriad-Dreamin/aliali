@@ -5,20 +5,27 @@ import (
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"gorm.io/gorm"
+	"time"
 )
 
 const (
 	UploadStatusUninitialized   int = 0
-	UploadStatusUploaded            = 1
-	UploadStatusSettledClear        = 2
-	UploadStatusSettledNotClear     = 3
+	UploadStatusInitialized         = 1
+	UploadStatusUploading           = 2
+	UploadStatusUploaded            = 3
+	UploadStatusSetting             = 4
+	UploadStatusSettledClear        = 5
+	UploadStatusSettledNotClear     = 6
 
 	UploadStatusSettledExit = 1000
 )
 
 type UploadModel struct {
-	gorm.Model
-	Status     int
+	ID         uint64 `gorm:"primarykey"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	Status     int            `gorm:"column:status"`
 	DriveID    string
 	RemotePath string
 	LocalPath  string
