@@ -1,5 +1,10 @@
 package main
 
+import (
+	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
+	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
+)
+
 const (
 	DefaultChunkSize = 1048576
 )
@@ -21,4 +26,9 @@ func (w *Worker) loop() {
 func main() {
 	//var mockFile = bytes.NewBuffer(nil)
 	//mockFile.WriteString("test2")
+
+	var s = suppress.PanicAll{}
+
+	notifier := ali_notifier.BiliRecorderNotifier{}
+	s.Suppress(notifier.Run())
 }

@@ -12,6 +12,8 @@ require (
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.3 // indirect
+	github.com/kataras/iris/v12 v12.1.8 // indirect
 	github.com/mattn/go-sqlite3 v1.14.9 // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20211029224645-99673261e6eb // indirect
 )
