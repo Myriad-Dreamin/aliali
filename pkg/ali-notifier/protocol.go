@@ -3,6 +3,7 @@ package ali_notifier
 type FsUploadRequest struct {
 	TransactionID uint64
 
-	LocalPath  string
+	DriveID    string
 	RemotePath string
+	LocalPath  string
 }

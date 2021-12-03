@@ -9,7 +9,10 @@ import (
 
 func (w *Worker) serveUploadRequest(
 	ifs FsClearInterface, req *ali_notifier.FsUploadRequest, uploadReq IUploadRequest) error {
-	if !w.xdb.TransitUploadStatus(w.db, ifs, req, model.UploadStatusInitialized, model.UploadStatusUploading) {
+	if !w.ensureFsFileExists(ifs, req.LocalPath) {
+		return nil
+	}
+	if !w.xdb.TransitUploadStatus(w.db, req, model.UploadStatusInitialized, model.UploadStatusUploading) {
 		return nil
 	}
 
@@ -18,18 +21,25 @@ func (w *Worker) serveUploadRequest(
 	go func() {
 		resp := workerImpl.Upload(context.TODO(), w.authedAli, uploadReq)
 
-		// the worker is blameless
-		w.serviceQueue <- workerImpl
+		var returnService = func() {
+			// the worker is blameless
+			w.serviceQueue <- workerImpl
+		}
 
 		// handle error after returning worker
 		// we leverage the bottom half of this coroutine to process an upload response
 		if resp.Code == 0 {
-			if w.xdb.TransitUploadStatus(w.db, ifs, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
+			if !w.ensureFsFileExists(ifs, req.LocalPath) {
+				returnService()
+				return
+			}
+			if w.xdb.TransitUploadStatus(w.db, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
 				w.checkUploadAndClear(ifs, req)
 			}
 		} else if resp.Err != nil {
 			w.s.Suppress(resp.Err)
 		}
+		returnService()
 	}()
 	return nil
 }

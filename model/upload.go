@@ -13,9 +13,8 @@ const (
 	UploadStatusInitialized         = 1
 	UploadStatusUploading           = 2
 	UploadStatusUploaded            = 3
-	UploadStatusSetting             = 4
-	UploadStatusSettledClear        = 5
-	UploadStatusSettledNotClear     = 6
+	UploadStatusSettledClear        = 4
+	UploadStatusSettledNotClear     = 5
 
 	UploadStatusSettledExit = 1000
 )

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"github.com/Myriad-Dreamin/aliali/model"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"testing"
@@ -17,8 +19,11 @@ func (m *MapRmRs) Remove(s string) error {
 }
 
 func TestUpload(t *testing.T) {
+	var notifier = &ali_notifier.Notifier{}
+
 	var worker = NewWorker(
 		MockDB(),
+		WithNotifier(notifier),
 		WithServiceReplicate(&MockService{}),
 		WithConfig(&ali_notifier.Config{
 			Version: "aliyunpan/v1beta",
@@ -30,6 +35,14 @@ func TestUpload(t *testing.T) {
 			},
 		}))
 
+	var fsReq = &ali_notifier.FsUploadRequest{
+		TransactionID: 1,
+		LocalPath:     "test",
+		RemotePath:    "remove/test",
+	}
+
+	notifier.Emit(fsReq)
+
 	content := []byte("123")
 	var x = NewBytesRandReader(content)
 
@@ -38,11 +51,7 @@ func TestUpload(t *testing.T) {
 			Mode:    0644,
 			ModTime: time.Time{},
 		},
-	}}, &ali_notifier.FsUploadRequest{
-		TransactionID: 1,
-		LocalPath:     "test",
-		RemotePath:    "remove/test",
-	}, &RandReaderUploadRequest{
+	}}, fsReq, &RandReaderUploadRequest{
 		BaseUploadRequest: BaseUploadRequest{
 			XDriverID:  "456",
 			XFileName:  "test",
@@ -53,6 +62,24 @@ func TestUpload(t *testing.T) {
 		s: &suppress.PanicAll{},
 	})
 	if err != nil {
+		t.Error(err)
 		return
+	}
+
+	// drain work
+	svc := <-worker.serviceQueue
+	worker.serviceQueue <- svc
+
+	var m = &model.UploadModel{
+		DriveID:    fsReq.DriveID,
+		RemotePath: fsReq.RemotePath,
+		LocalPath:  fsReq.LocalPath,
+	}
+	if !worker.xdb.FindUploadRequest(worker.db, m) {
+		t.Error(errors.New("req not found"))
+	}
+
+	if m.Status != model.UploadStatusSettledClear {
+		t.Error(errors.New("not clear"))
 	}
 }

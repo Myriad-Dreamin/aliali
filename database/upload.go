@@ -5,13 +5,39 @@ import (
 	"github.com/Myriad-Dreamin/aliali/model"
 	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"gorm.io/gorm"
-	"io/fs"
-	"os"
 )
 
+func (s *DB) FindUploadRequest(db *gorm.DB, req *model.UploadModel) bool {
+	e := db.Where(req).First(req)
+	if e.Error == gorm.ErrRecordNotFound {
+		return false
+	} else if e.Error != nil {
+		s.Suppress(e.Error)
+	}
+
+	return true
+}
+
+func (s *DB) SaveUploadRequest(db *gorm.DB, model *model.UploadModel) {
+	if model.ID == 0 {
+		if !s.FindUploadRequest(db, model) {
+			db = db.Create(model)
+		} else {
+			db = db.Save(model)
+		}
+	} else {
+		db = db.Save(model)
+	}
+	if db.Error != nil {
+		s.Suppress(db.Error)
+	}
+
+	return
+}
+
 func (s *DB) TransitUploadStatus(
-	db *gorm.DB, ifs fs.FS, req *ali_notifier.FsUploadRequest, fr, to int) bool {
-	return s.TransitUploadStatusT(db, ifs, req, func(req *ali_notifier.FsUploadRequest, status int) (target int, err error) {
+	db *gorm.DB, req *ali_notifier.FsUploadRequest, fr, to int) bool {
+	return s.TransitUploadStatusT(db, req, func(req *ali_notifier.FsUploadRequest, status int) (target int, err error) {
 		if status != fr {
 			return
 		}
@@ -22,18 +48,8 @@ func (s *DB) TransitUploadStatus(
 }
 
 func (s *DB) TransitUploadStatusT(
-	db *gorm.DB, operating fs.FS, req *ali_notifier.FsUploadRequest,
+	db *gorm.DB, req *ali_notifier.FsUploadRequest,
 	transition func(req *ali_notifier.FsUploadRequest, status int) (int, error)) (changed bool) {
-
-	// return anyway
-	if _, err := fs.Stat(operating, req.LocalPath); os.IsNotExist(err) {
-		return
-		// fs error
-	} else if err != nil && !os.IsExist(err) {
-		s.Suppress(err)
-		return
-	}
-
 	if err := db.Transaction(func(tx *gorm.DB) error {
 		// querying
 		var x = model.UploadModel{
@@ -60,7 +76,7 @@ func (s *DB) TransitUploadStatusT(
 		changed = true
 
 		// commit
-		if x.Status != x.Status {
+		if x.Status != st {
 			e = tx.Model(&x).Update("status", st)
 			if e.Error == gorm.ErrRecordNotFound {
 				s.WarnOnce(e.Error)

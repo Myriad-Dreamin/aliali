@@ -14,11 +14,12 @@ type Worker struct {
 	auth        *model.AliAuthModel
 	httpHeaders [][2]string
 
+	s         suppress.ISuppress
 	ali       *ali_drive.Ali
 	authedAli *ali_drive.Ali
-	s         suppress.ISuppress
 	db        *gorm.DB
 	xdb       *database.DB
+	notifier  ali_notifier.INotifier
 
 	fileUploads  chan *ali_notifier.FsUploadRequest
 	serviceQueue chan IService
@@ -39,6 +40,13 @@ func MockDB() Option {
 func WithConfig(cfg *ali_notifier.Config) Option {
 	return func(w *Worker) *Worker {
 		w.cfg = cfg
+		return w
+	}
+}
+
+func WithNotifier(notifier ali_notifier.INotifier) Option {
+	return func(w *Worker) *Worker {
+		w.notifier = notifier
 		return w
 	}
 }
@@ -87,10 +95,16 @@ func NewWorker(options ...Option) *Worker {
 	if w.xdb == nil {
 		w.xdb = &database.DB{ISuppress: w.s}
 	}
+	if w.notifier == nil {
+		w.notifier = &ali_notifier.BiliRecorderNotifier{}
+	}
 
-	if w.ali == nil || w.db == nil || w.cfg == nil || w.serviceQueue == nil || w.xdb == nil {
+	if w.ali == nil || w.db == nil || w.cfg == nil ||
+		w.serviceQueue == nil || w.xdb == nil || w.notifier == nil {
 		return nil
 	}
+
+	w.setupNotifier()
 
 	return w
 }

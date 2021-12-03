@@ -24,12 +24,10 @@ func (s *DB) FindAuthModelByKey(db *gorm.DB, model *model.AliAuthModel) bool {
 func (s *DB) SaveAuthModel(db *gorm.DB, model *model.AliAuthModel) {
 	if model.ID == 0 {
 		if !s.FindAuthModelByKey(db, model) {
-			return
+			db = db.Create(model)
+		} else {
+			db = db.Save(model)
 		}
-	}
-
-	if model.ID == 0 {
-		db = db.Create(model)
 	} else {
 		db = db.Save(model)
 	}
