@@ -13,7 +13,7 @@ func (w *Worker) syncDBSchemas(db *gorm.DB) *gorm.DB {
 }
 
 func (w *Worker) openDB() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("ali.db"))
+	db, err := gorm.Open(sqlite.Open(w.dbPath))
 	if err != nil {
 		w.s.Suppress(err)
 		return nil

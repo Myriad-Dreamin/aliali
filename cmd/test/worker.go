@@ -11,6 +11,7 @@ import (
 
 type Worker struct {
 	configPath string
+	dbPath     string
 
 	cfg         *ali_notifier.Config
 	auth        *model.AliAuthModel
@@ -42,6 +43,13 @@ func MockDB() Option {
 func WithConfigPath(cfgPath string) Option {
 	return func(w *Worker) *Worker {
 		w.configPath = cfgPath
+		return w
+	}
+}
+
+func WithDBPath(dbPath string) Option {
+	return func(w *Worker) *Worker {
+		w.dbPath = dbPath
 		return w
 	}
 }
@@ -98,6 +106,9 @@ func NewWorker(options ...Option) *Worker {
 		w.cfg = w.syncConfig()
 	}
 	if w.db == nil {
+		if len(w.dbPath) == 0 {
+			w.dbPath = DefaultDatabasePath
+		}
 		w.db = w.openDB()
 	}
 	if w.serviceQueue == nil {
