@@ -1,5 +1,7 @@
 package ali_drive
 
+import "fmt"
+
 type UploadFileRequest struct {
 	DriveID string         `json:"drive_id"`
 	Name    string         `json:"name"`
@@ -11,6 +13,8 @@ type UploadSession struct {
 	DriveDirentID DriveDirentID `json:"dirent_id"`
 	PartInfoList  []PartInfo    `json:"part_info_list"`
 	UploadID      string        `json:"upload_id"`
+	Hash          string        `json:"hash"`
+	PreHash       string        `json:"pre_hash"`
 }
 
 func (y *Ali) UploadFile(req *UploadFileRequest) bool {
@@ -33,6 +37,13 @@ func (y *Ali) UploadFile(req *UploadFileRequest) bool {
 			PartInfoList:  req.Session.PartInfoList,
 			Size:          req.File.Size,
 		}
+
+		if len(req.Session.Hash) != 0 {
+			subReq.ContentHash = req.Session.Hash
+			subReq.ContentHashName = "sha1"
+		}
+
+		fmt.Println("hash?", req.Session.Hash, req.Session.PreHash, subReq)
 		resp := y.FileCreateWithFolders(subReq)
 		req.Session.DriveDirentID = resp.DriveDirentID
 		req.Session.UploadID = resp.UploadID

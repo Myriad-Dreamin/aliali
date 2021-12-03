@@ -87,8 +87,8 @@ func (d *Dispatcher) serveFsUploadRequest(req *ali_notifier.FsUploadRequest) err
 			XSize:      st.Size(),
 			XChunkHint: d.chunkSize(),
 		},
-		r: o,
-		s: d.s,
+		R: o,
+		S: d.s,
 	}
 
 	return d.serveUploadRequest(realFs(), req, uploadReq)

@@ -4,6 +4,7 @@ import (
 	"github.com/Myriad-Dreamin/aliali/dispatcher"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
+	"github.com/kataras/iris/v12"
 )
 
 func main() {
@@ -17,8 +18,11 @@ func main() {
 
 	notifier.StorePath = d.GetConfig().AliDrive.RootPath
 
+	r := iris.New().Configure(iris.WithoutBanner)
+
+	notifier.ExposeHttp(r)
 	go func() {
-		s.Suppress(notifier.Run())
+		s.Suppress(r.Listen(":10305"))
 	}()
 
 	d.Loop()

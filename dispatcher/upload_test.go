@@ -64,8 +64,8 @@ func TestUpload(t *testing.T) {
 			XSize:      int64(len(content)),
 			XChunkHint: 1024,
 		},
-		r: x,
-		s: &suppress.PanicAll{},
+		R: x,
+		S: &suppress.PanicAll{},
 	})
 	if err != nil {
 		t.Error(err)

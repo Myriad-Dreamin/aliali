@@ -63,12 +63,12 @@ func (b *BaseUploadRequest) ChunkHint() int64 {
 
 type RandReaderUploadRequest struct {
 	BaseUploadRequest
-	r RandReadCloser
-	s suppress.ISuppress
+	R RandReadCloser
+	S suppress.ISuppress
 }
 
 func (f *RandReaderUploadRequest) Done() {
-	f.s.Suppress(f.r.Close())
+	f.S.Suppress(f.R.Close())
 }
 
 func (f *RandReaderUploadRequest) ReadAt(pos, maxLen int64) io.Reader {
@@ -78,9 +78,9 @@ func (f *RandReaderUploadRequest) ReadAt(pos, maxLen int64) io.Reader {
 	}
 
 	var bufRaw = make([]byte, sz)
-	x, err := f.r.ReadAt(bufRaw, pos)
+	x, err := f.R.ReadAt(bufRaw, pos)
 	if err != nil {
-		f.s.Suppress(err)
+		f.S.Suppress(err)
 		return nil
 	}
 

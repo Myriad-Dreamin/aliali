@@ -141,9 +141,7 @@ func (b *HttpRecorderNotifier) NotifyWebhookEvent(ctx context.Context) {
 	b.NotifyMaybeUploadEvent(ctx, req.Path, req.RemotePath)
 }
 
-func (b *HttpRecorderNotifier) Run() error {
-	r := iris.New().Configure(iris.WithoutBanner)
+func (b *HttpRecorderNotifier) ExposeHttp(r *iris.Application) {
 	r.Handle("POST", "/notifier/bilibili", b.NotifyBilibiliEvent)
 	r.Handle("GET", "/notifier/webhook", b.NotifyWebhookEvent)
-	return r.Listen(":10305")
 }
