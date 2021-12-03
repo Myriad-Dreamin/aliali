@@ -57,10 +57,10 @@ func (s *DB) SaveUploadSession(db *gorm.DB, model *model.UploadModel) bool {
 		if !s.FindUploadRequest(db, model) {
 			return false
 		} else {
-			db = db.Update("raw", model.Raw)
+			db = db.Model(model).Update("raw", model.Raw)
 		}
 	} else {
-		db = db.Update("raw", model.Raw)
+		db = db.Model(model).Update("raw", model.Raw)
 	}
 	if db.Error != nil {
 		s.Suppress(db.Error)
