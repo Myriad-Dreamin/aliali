@@ -5,6 +5,8 @@ import (
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"github.com/kataras/iris/v12"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -23,6 +25,9 @@ func main() {
 	notifier.ExposeHttp(r)
 	go func() {
 		s.Suppress(r.Listen(":10305"))
+	}()
+	go func() {
+		_ = http.ListenAndServe("0.0.0.0:10306", nil)
 	}()
 
 	d.Loop()

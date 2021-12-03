@@ -28,18 +28,7 @@ func (d *Dispatcher) serveUploadRequest(
 			d.serviceQueue <- serviceImpl
 		}
 
-		// handle error after returning service
-		// we leverage the bottom half of this coroutine to process an upload response
-		switch resp.Code {
-		case service.UploadOK:
-			if !d.ensureFsFileExists(ifs, req.LocalPath) {
-				returnService()
-				return
-			}
-			if d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
-				d.checkUploadAndClear(ifs, req)
-			}
-		case service.UploadCancelled:
+		var saveSession = func() {
 			var m = &model.UploadModel{
 				ID:         req.TransactionID,
 				DriveID:    req.DriveID,
@@ -50,6 +39,22 @@ func (d *Dispatcher) serveUploadRequest(
 			if m.Set(d.s, uploadReq.Session()) {
 				d.xdb.SaveUploadSession(d.db, m)
 			}
+		}
+
+		// handle error after returning service
+		// we leverage the bottom half of this coroutine to process an upload response
+		switch resp.Code {
+		case service.UploadOK:
+			saveSession()
+			if !d.ensureFsFileExists(ifs, req.LocalPath) {
+				returnService()
+				return
+			}
+			if d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
+				d.checkUploadAndClear(ifs, req)
+			}
+		case service.UploadCancelled:
+			saveSession()
 			d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusInitialized)
 		default:
 			if resp.Err != nil {

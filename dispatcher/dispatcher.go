@@ -16,6 +16,7 @@ type Dispatcher struct {
 	configPath string
 	dbPath     string
 
+	dbMgr       *DBManager
 	cfg         *ali_notifier.Config
 	auth        *model.AliAuthModel
 	httpHeaders [][2]string
@@ -95,6 +96,7 @@ func NewDispatcher(options ...Option) *Dispatcher {
 		httpHeaders: httpHeaders,
 	}
 
+	w.dbMgr = &DBManager{S: w.s}
 	for _, option := range options {
 		w = option(w)
 		if w == nil {
