@@ -53,4 +53,4 @@ go build -o docker/bin/notifier ./cmd/notifier
 
 ### License
 
-MIT
+MIT License
