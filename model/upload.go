@@ -28,7 +28,7 @@ type UploadModel struct {
 	DriveID    string
 	RemotePath string
 	LocalPath  string
-	Raw        []byte `gorm:"column:status"`
+	Raw        []byte `gorm:"column:raw"`
 
 	uploadData *ali_drive.UploadSession
 }
