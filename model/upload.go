@@ -16,7 +16,8 @@ const (
 	UploadStatusSettledClear        = 4
 	UploadStatusSettledNotClear     = 5
 
-	UploadStatusSettledExit = 1000
+	UploadStatusSettledExit            = 1000
+	UploadStatusSettledExitFileFlyAway = 1001
 )
 
 type UploadModel struct {

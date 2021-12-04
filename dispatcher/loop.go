@@ -10,6 +10,30 @@ func (d *Dispatcher) Loop() {
 	d.logger.Printf("main dispatcher entering forever loop")
 	tick := time.NewTicker(time.Second)
 	var stackModel model.UploadModel
+
+	var getReq = func() *ali_notifier.FsUploadRequest {
+		return &ali_notifier.FsUploadRequest{
+			TransactionID: stackModel.ID,
+			DriveID:       stackModel.DriveID,
+			RemotePath:    stackModel.RemotePath,
+			LocalPath:     stackModel.LocalPath,
+		}
+	}
+
+	for {
+		if !d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusUploading) {
+			break
+		}
+		d.xdb.TransitUploadStatus(d.db, getReq(), model.UploadStatusUploading, model.UploadStatusInitialized)
+	}
+
+	for {
+		if !d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusUploaded) {
+			break
+		}
+		d.xdb.TransitUploadStatus(d.db, getReq(), model.UploadStatusUploaded, model.UploadStatusInitialized)
+	}
+
 	for {
 		select {
 		case req := <-d.fileUploads:
@@ -22,12 +46,7 @@ func (d *Dispatcher) Loop() {
 			}
 		case <-tick.C:
 			if d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusInitialized) {
-				d.fileUploads <- &ali_notifier.FsUploadRequest{
-					TransactionID: stackModel.ID,
-					DriveID:       stackModel.DriveID,
-					RemotePath:    stackModel.RemotePath,
-					LocalPath:     stackModel.LocalPath,
-				}
+				d.fileUploads <- getReq()
 			}
 		}
 	}

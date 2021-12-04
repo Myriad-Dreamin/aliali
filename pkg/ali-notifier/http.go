@@ -46,7 +46,7 @@ func SecureJoin(root string, components string) string {
 	return res
 }
 
-func (b *HttpRecorderNotifier) NotifyMaybeUploadEvent(ctx context.Context, relLocalPath string, remotePath string) {
+func (b *HttpRecorderNotifier) NotifyMaybeUploadEvent(ctx *context.Context, relLocalPath string, remotePath string) {
 	if len(relLocalPath) == 0 {
 		ctx.StatusCode(iris.StatusBadRequest)
 		_, _ = ctx.JSON(WebhookNotificationResponse{
@@ -83,7 +83,7 @@ func (b *HttpRecorderNotifier) NotifyMaybeUploadEvent(ctx context.Context, relLo
 	})
 }
 
-func (b *HttpRecorderNotifier) NotifyBilibiliEvent(ctx context.Context) {
+func (b *HttpRecorderNotifier) NotifyBilibiliEvent(ctx *context.Context) {
 	var req BiliNotificationRequest
 	if err := ctx.ReadJSON(&req); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
@@ -127,7 +127,7 @@ func (b *HttpRecorderNotifier) NotifyBilibiliEvent(ctx context.Context) {
 	})
 }
 
-func (b *HttpRecorderNotifier) NotifyWebhookEvent(ctx context.Context) {
+func (b *HttpRecorderNotifier) NotifyWebhookEvent(ctx *context.Context) {
 	var req WebhookNotificationRequest
 	if err := ctx.ReadQuery(&req); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)

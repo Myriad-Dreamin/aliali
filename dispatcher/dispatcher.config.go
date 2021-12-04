@@ -3,14 +3,39 @@ package dispatcher
 import (
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
+	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"gopkg.in/yaml.v2"
+	"gorm.io/gorm"
 	"os"
 	"strconv"
 	"time"
 )
 
+type ConfigManager struct {
+	S suppress.ISuppress
+}
+
+func (d *ConfigManager) ReadConfig(configPath string) *ali_notifier.Config {
+	f, err := os.OpenFile(configPath, os.O_RDONLY, 0644)
+	if err != nil {
+		d.S.Suppress(err)
+		return nil
+	}
+
+	var cfg = new(ali_notifier.Config)
+	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
+		d.S.Suppress(err)
+	}
+
+	return cfg
+}
+
 func (d *Dispatcher) GetConfig() *ali_notifier.Config {
 	return d.cfg
+}
+
+func (d *Dispatcher) GetDatabase() *gorm.DB {
+	return d.db
 }
 
 func (d *Dispatcher) chunkSize() int64 {
@@ -35,16 +60,5 @@ func (d *Dispatcher) authExpired() bool {
 }
 
 func (d *Dispatcher) syncConfig() *ali_notifier.Config {
-	f, err := os.OpenFile(d.configPath, os.O_RDONLY, 0644)
-	if err != nil {
-		d.s.Suppress(err)
-		return nil
-	}
-
-	var cfg = new(ali_notifier.Config)
-	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
-		d.s.Suppress(err)
-	}
-
-	return cfg
+	return d.cfgMgr.ReadConfig(d.configPath)
 }

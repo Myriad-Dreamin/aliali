@@ -4,3 +4,7 @@ ali-drive:
   drive-id: 1234
   root-path: 录播同步
   chunk-size: 10485760
+backend:
+  jwt-secret: d36671dca45d8ca03e86
+  account: kamiyoru
+  password-hash: md5-hash

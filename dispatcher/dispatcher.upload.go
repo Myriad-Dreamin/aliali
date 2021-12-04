@@ -68,6 +68,12 @@ func (d *Dispatcher) serveUploadRequest(
 }
 
 func (d *Dispatcher) serveFsUploadRequest(req *ali_notifier.FsUploadRequest) error {
+	var operating = realFs()
+	if !d.ensureFsFileExists(operating, req.LocalPath) {
+		d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusInitialized, model.UploadStatusSettledExitFileFlyAway)
+		return nil
+	}
+
 	o, err := os.OpenFile(req.LocalPath, os.O_RDONLY, 0644)
 	if err != nil {
 		return err
@@ -96,5 +102,5 @@ func (d *Dispatcher) serveFsUploadRequest(req *ali_notifier.FsUploadRequest) err
 		S: d.s,
 	}
 
-	return d.serveUploadRequest(realFs(), req, uploadReq)
+	return d.serveUploadRequest(operating, req, uploadReq)
 }
