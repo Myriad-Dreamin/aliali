@@ -1,9 +1,8 @@
-package service_test
+package ali_utils
 
 import (
 	"errors"
 	"github.com/Myriad-Dreamin/aliali/dispatcher"
-	"github.com/Myriad-Dreamin/aliali/dispatcher/service"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"io/ioutil"
 	"testing"
@@ -16,9 +15,9 @@ func TestRangeReader(t *testing.T) {
 		xb[i] = byte(i & 0xff)
 	}
 
-	var gg = dispatcher.NewBytesRandReader(xb)
+	var gg = NewBytesRandReader(xb)
 
-	var gg2 = service.RangeReader(&dispatcher.RandReaderUploadRequest{
+	var gg2 = NewRangeReader(&dispatcher.RandReaderUploadRequest{
 		BaseUploadRequest: dispatcher.BaseUploadRequest{
 			XFileName:  "",
 			XSize:      257 * 1024,

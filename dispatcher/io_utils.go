@@ -3,40 +3,11 @@ package dispatcher
 import (
 	"bytes"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
+	ali_utils "github.com/Myriad-Dreamin/aliali/pkg/ali-utils"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"io"
 	"io/fs"
-	"os"
-	"path/filepath"
 )
-
-type RandReadCloser interface {
-	io.ReaderAt
-	io.Closer
-}
-
-type rrr struct {
-	b []byte
-}
-
-func (r *rrr) Close() error {
-	return nil
-}
-
-func (r *rrr) ReadAt(p []byte, off int64) (n int, err error) {
-	copy(p, r.b[off:])
-	if len(r.b) < len(p) {
-		n = len(r.b)
-		return
-	}
-
-	n = len(p)
-	return n, nil
-}
-
-func NewBytesRandReader(b []byte) RandReadCloser {
-	return &rrr{b}
-}
 
 type BaseUploadRequest struct {
 	XSession   *ali_drive.UploadSession
@@ -63,7 +34,7 @@ func (b *BaseUploadRequest) ChunkHint() int64 {
 
 type RandReaderUploadRequest struct {
 	BaseUploadRequest
-	R RandReadCloser
+	R ali_utils.RandReadCloser
 	S suppress.ISuppress
 }
 
@@ -92,19 +63,6 @@ func (f *RandReaderUploadRequest) ReadAt(pos, maxLen int64) io.Reader {
 	return buf
 }
 
-type osFs struct {
-	s string
-	fs.FS
-}
-
-func (o osFs) Remove(s string) error {
-	return os.Remove(filepath.Join(o.s, s))
-}
-
-func realFs() FsClearInterface {
-	return osFs{"/", os.DirFS("")}
-}
-
 type ignoreFs struct {
 	fs.FS
 }
@@ -113,6 +71,6 @@ func (o ignoreFs) Remove(s string) error {
 	return nil
 }
 
-func ignoreRemoveFs(f fs.FS) FsClearInterface {
+func ignoreRemoveFs(f fs.FS) ali_utils.FsClearInterface {
 	return ignoreFs{FS: f}
 }

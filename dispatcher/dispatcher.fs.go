@@ -3,17 +3,13 @@ package dispatcher
 import (
 	"github.com/Myriad-Dreamin/aliali/model"
 	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
+	"github.com/Myriad-Dreamin/aliali/pkg/ali-utils"
 	"io/fs"
 	"os"
 	"strings"
 )
 
-type FsClearInterface interface {
-	fs.FS
-	Remove(path string) error
-}
-
-func (d *Dispatcher) ensureFsFileExists(operating FsClearInterface, path string) bool {
+func (d *Dispatcher) ensureFsFileExists(operating ali_utils.FsClearInterface, path string) bool {
 	if _, err := fs.Stat(operating, strings.TrimPrefix(path, "/")); os.IsNotExist(err) {
 		return false
 		// fs error
@@ -25,7 +21,7 @@ func (d *Dispatcher) ensureFsFileExists(operating FsClearInterface, path string)
 	return true
 }
 
-func (d *Dispatcher) checkUploadAndClear(operating FsClearInterface, req *ali_notifier.FsUploadRequest) {
+func (d *Dispatcher) checkUploadAndClear(operating ali_utils.FsClearInterface, req *ali_notifier.FsUploadRequest) {
 	if !d.ensureFsFileExists(operating, req.LocalPath) {
 		return
 	}

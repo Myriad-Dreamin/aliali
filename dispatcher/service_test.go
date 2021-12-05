@@ -7,6 +7,7 @@ import (
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
+	"github.com/Myriad-Dreamin/aliali/pkg/ali-utils"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"testing"
 	"testing/fstest"
@@ -38,9 +39,9 @@ func newMockDispatcher(notifier *ali_notifier.Notifier, svc service.IService) *D
 }
 
 func NewMemoryRequest(
-	fsReq *ali_notifier.FsUploadRequest, contentS string) (FsClearInterface, *ali_notifier.FsUploadRequest, service.IUploadRequest) {
+	fsReq *ali_notifier.FsUploadRequest, contentS string) (ali_utils.FsClearInterface, *ali_notifier.FsUploadRequest, service.IUploadRequest) {
 	content := []byte(contentS)
-	var x = NewBytesRandReader(content)
+	var x = ali_utils.NewBytesRandReader(content)
 	return &MapRmRs{map[string]*fstest.MapFile{
 			fsReq.LocalPath: {
 				Mode:    0644,

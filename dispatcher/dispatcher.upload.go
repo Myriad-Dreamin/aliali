@@ -6,11 +6,12 @@ import (
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	"github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
+	ali_utils "github.com/Myriad-Dreamin/aliali/pkg/ali-utils"
 	"os"
 )
 
 func (d *Dispatcher) serveUploadRequest(
-	ifs FsClearInterface, req *ali_notifier.FsUploadRequest, uploadReq service.IUploadRequest) error {
+	ifs ali_utils.FsClearInterface, req *ali_notifier.FsUploadRequest, uploadReq service.IUploadRequest) error {
 	if !d.ensureFsFileExists(ifs, req.LocalPath) {
 		d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusInitialized, model.UploadStatusSettledExitFileFlyAway)
 		return nil
@@ -81,7 +82,7 @@ func (d *Dispatcher) serveUploadRequest(
 }
 
 func (d *Dispatcher) serveFsUploadRequest(req *ali_notifier.FsUploadRequest) error {
-	var operating = realFs()
+	var operating = ali_utils.RealFs()
 	if !d.ensureFsFileExists(operating, req.LocalPath) {
 		d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusInitialized, model.UploadStatusSettledExitFileFlyAway)
 		return nil
