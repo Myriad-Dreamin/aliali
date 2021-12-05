@@ -2,6 +2,8 @@ module github.com/Myriad-Dreamin/aliali
 
 go 1.17
 
+replace github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.2.0
+
 require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/kataras/iris/v12 v12.2.0-alpha2
@@ -57,10 +59,9 @@ require (
 require (
 	github.com/Joker/hpp v1.0.0 // indirect
 	github.com/andybalholm/brotli v1.0.2 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/iris-contrib/middleware/cors v0.0.0-20210110101738-6d0a4d799b5d
-	github.com/iris-contrib/middleware/jwt v0.0.0-20210110101738-6d0a4d799b5d
 	github.com/klauspost/compress v1.13.4 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect

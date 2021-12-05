@@ -2,20 +2,19 @@ package server
 
 import (
 	"errors"
-	"github.com/dgrijalva/jwt-go"
-	jailer "github.com/iris-contrib/middleware/jwt"
+	jwt_middleware "github.com/Myriad-Dreamin/aliali/pkg/jwt-middleware"
 )
 
-func (srv *Server) JwtHandler() *jailer.Middleware {
-	return jailer.New(jailer.Config{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+func (srv *Server) JwtHandler() *jwt_middleware.Middleware {
+	return jwt_middleware.New(jwt_middleware.Config{
+		ValidationKeyGetter: func(token *jwt_middleware.Token) (interface{}, error) {
 			if srv.Config == nil || len(srv.Config.JwtSecret) == 0 {
 				return nil, errors.New("没有配置后端安全验证呢")
 			}
 
 			return []byte(srv.Config.JwtSecret), nil
 		},
-		SigningMethod: jwt.SigningMethodHS512,
+		SigningMethod: jwt_middleware.SigningMethodHS512,
 		Expiration:    true,
 	})
 

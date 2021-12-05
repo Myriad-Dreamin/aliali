@@ -3,7 +3,7 @@ package server
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/dgrijalva/jwt-go"
+	jwt_middleware "github.com/Myriad-Dreamin/aliali/pkg/jwt-middleware"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/context"
 	"time"
@@ -60,8 +60,8 @@ func (srv *Server) Login(ctx *context.Context) {
 		return
 	}
 
-	token := jwt.New(jwt.SigningMethodHS512)
-	claims := make(jwt.MapClaims)
+	token := jwt_middleware.NewToken(jwt_middleware.SigningMethodHS512)
+	claims := make(jwt_middleware.MapClaims)
 	var expiresIn = time.Hour * time.Duration(12)
 	claims["exp"] = time.Now().Add(expiresIn).Unix()
 	claims["iat"] = time.Now().Unix()
