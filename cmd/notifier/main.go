@@ -9,6 +9,7 @@ import (
 	"github.com/Myriad-Dreamin/aliali/registry"
 	"github.com/Myriad-Dreamin/aliali/server"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 	"log"
 	_ "net/http/pprof"
 	"os"
@@ -47,6 +48,15 @@ func clientMain(c *registry.Client) {
 	_ = c.Run()
 }
 
+func createServer(s suppress.ISuppress, cfg *ali_notifier.BackendConfig, db *gorm.DB) *server.Server {
+	return &server.Server{
+		Logger: log.New(os.Stderr, "[backend] ", log.Llongfile|log.LUTC),
+		S:      s,
+		DB:     db,
+		Config: cfg,
+	}
+}
+
 func backendListen(ident string, cfg *ali_notifier.Config, r *iris.Application) error {
 	var host = "0.0.0.0"
 	var port = "10305"
@@ -82,10 +92,7 @@ func notifierMain(ident string) {
 	r := iris.New().Configure(iris.WithoutBanner)
 	iris_cors.Use(r)
 	notifier.ExposeHttp(r)
-	(&server.Server{
-		S:  s,
-		DB: d.GetDatabase(),
-	}).ExposeHttp(r)
+	createServer(s, &d.GetConfig().Backend, d.GetDatabase()).ExposeHttp(r)
 	go func() {
 		s.Suppress(backendListen(ident, d.GetConfig(), r))
 	}()
@@ -101,12 +108,7 @@ func backendMain(ident string) {
 	var cm = &dispatcher.ConfigManager{S: s}
 	var db = dm.OpenSqliteDB("deployment/backend-workdir/ali.db")
 	var cfg = cm.ReadConfig(dispatcher.DefaultConfigPath)
-	var srv = &server.Server{
-		Logger: log.New(os.Stderr, "[backend] ", log.Llongfile|log.LUTC),
-		S:      s,
-		DB:     db,
-		Config: &cfg.Backend,
-	}
+	var srv = createServer(s, &cfg.Backend, db)
 	var c = createClient(ident, cfg)
 
 	r := iris.New()
@@ -123,13 +125,7 @@ func registryMain(ident string) {
 	var s = suppress.PanicAll{}
 	var cm = &dispatcher.ConfigManager{S: s}
 	var cfg = cm.ReadConfig(dispatcher.DefaultConfigPath)
-	var srv = registry.NewRegistry(
-		&server.Server{
-			Logger: log.New(os.Stderr, "[backend] ", log.Llongfile|log.LUTC),
-			S:      s,
-			Config: &cfg.Backend,
-		},
-		cfg, ident)
+	var srv = registry.NewRegistry(createServer(s, &cfg.Backend, nil), cfg, ident)
 	var c = createClient(ident, cfg)
 
 	r := iris.New()

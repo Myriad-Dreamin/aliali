@@ -51,7 +51,7 @@ func (srv *Server) ExposeHttp(r *iris.Application) {
 	r.Handle("POST", "api/v1/login", srv.Login)
 
 	r.PartyFunc("api/v1", func(p router.Party) {
-		p.Use(srv.JwtHandler().Serve)
+		p.Use(srv.JwtHandler(srv.Config).Serve)
 		p.Handle("GET", "/uploads", srv.GetUploadList)
 		p.Handle("DELETE", "/upload", srv.DeleteUpload)
 	})

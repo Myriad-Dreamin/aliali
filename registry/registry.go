@@ -8,7 +8,6 @@ import (
 	"github.com/kataras/iris/v12/context"
 	"github.com/kataras/iris/v12/core/router"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -29,20 +28,20 @@ type GetRegistryResponse struct {
 
 type Registry struct {
 	*server.Server
-	liveList map[string]*Info
-	Config   *ali_notifier.RegistryConfig
-	Servers  map[string]*ali_notifier.RegistryConfig
-	Ident    string
-	m        sync.Mutex
+	liveList       map[string]*Info
+	RegistryConfig *ali_notifier.RegistryConfig
+	Servers        map[string]*ali_notifier.RegistryConfig
+	Ident          string
+	m              sync.Mutex
 }
 
 func NewRegistry(srv *server.Server, cfg *ali_notifier.Config, ident string) *Registry {
 	return &Registry{
-		Server:   srv,
-		liveList: make(map[string]*Info),
-		Ident:    ident,
-		Config:   cfg.Servers[ident],
-		Servers:  cfg.Servers,
+		Server:         srv,
+		liveList:       make(map[string]*Info),
+		Ident:          ident,
+		RegistryConfig: cfg.Servers[ident],
+		Servers:        cfg.Servers,
 	}
 }
 
@@ -60,11 +59,11 @@ func (reg *Registry) PostRegister(ctx *context.Context) {
 		return
 	}
 
-	if reg.Config.Secret != req.Secret {
+	if reg.RegistryConfig.Secret != req.Secret {
 		return
 	}
 
-	var h = strings.Split(ctx.Host(), ":")[0]
+	var h = ctx.RemoteAddr()
 
 	reg.m.Lock()
 	if _, ok := reg.liveList[req.Server]; !ok {
@@ -124,7 +123,7 @@ func (reg *Registry) ExposeHttp(r *iris.Application) {
 	r.Handle("POST", "registry/v1/register", reg.PostRegister)
 	r.Handle("POST", "api/v1/login", reg.Server.Login)
 	r.PartyFunc("api/v1", func(p router.Party) {
-		p.Use(reg.JwtHandler().Serve)
+		p.Use(reg.JwtHandler(reg.Server.Config).Serve)
 		p.Handle("GET", "/uploads", reg.DelegateGetRequest)
 		p.Handle("DELETE", "/upload", reg.DelegatePostRequest)
 		p.Handle("GET", "/registry", reg.GetRegistry)

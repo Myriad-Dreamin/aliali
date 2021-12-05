@@ -39,9 +39,7 @@ func (c *Client) heartbeat() {
 		Port:   c.Config.ServerPort,
 		Server: c.Ident,
 	}
-	if c.DetectRecorderStatus() {
-		req.RecorderStatus = 1
-	}
+	req.RecorderStatus = 2
 
 	r := c.cli.R().
 		SetBody(req)
