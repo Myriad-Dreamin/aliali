@@ -1,6 +1,9 @@
 package ali_drive
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type UploadFileRequest struct {
 	DriveID string         `json:"drive_id"`
@@ -14,7 +17,26 @@ type UploadSession struct {
 	PartInfoList  []PartInfo    `json:"part_info_list"`
 	UploadID      string        `json:"upload_id"`
 	Hash          string        `json:"hash"`
+	ProofHash     string        `json:"proof_hash"`
 	PreHash       string        `json:"pre_hash"`
+}
+
+func (y *Ali) checkFileIntegrity(req *UploadFileRequest) bool {
+	{
+		var subReq = &ApiFileGetByIdRequest{
+			DriveDirentID: req.Session.DriveDirentID,
+		}
+		resp := y.FileGetById(subReq)
+		if resp == nil {
+			return false
+		}
+		if resp.ContentHash != strings.ToUpper(req.Session.Hash) || resp.ContentHashName != "sha1" {
+			return false
+		}
+		fmt.Printf("[AliYunDrive] 文件已校验: %s(%s)\n", req.Name, req.Session.Hash)
+	}
+
+	return true
 }
 
 func (y *Ali) UploadFile(req *UploadFileRequest) bool {
@@ -41,13 +63,22 @@ func (y *Ali) UploadFile(req *UploadFileRequest) bool {
 		if len(req.Session.Hash) != 0 {
 			subReq.ContentHash = req.Session.Hash
 			subReq.ContentHashName = "sha1"
+			subReq.ProofHash = req.Session.ProofHash
+			subReq.ProofHashName = "v1"
 		}
 
-		fmt.Println("hash?", req.Session.Hash, req.Session.PreHash, subReq)
 		resp := y.FileCreateWithFolders(subReq)
+		if resp == nil {
+			return false
+		}
 		req.Session.DriveDirentID = resp.DriveDirentID
 		req.Session.UploadID = resp.UploadID
 		req.Session.PartInfoList = resp.PartInfoList
+		fmt.Printf("[AliYunDrive] 文件上传开始: %s(%s) => %s\n", req.Name, req.Session.Hash, req.Session.UploadID)
+
+		if strings.HasPrefix(req.Session.UploadID, "rapid-") {
+			return y.checkFileIntegrity(req)
+		}
 	}
 
 	// upload parts
@@ -56,7 +87,9 @@ func (y *Ali) UploadFile(req *UploadFileRequest) bool {
 		for i := range req.Session.PartInfoList {
 			subReq.Uri = req.Session.PartInfoList[i].UploadURL
 			subReq.Reader = req.File
-			y.FileUploadPart(subReq)
+			if y.FileUploadPart(subReq) == nil {
+				return false
+			}
 		}
 	}
 
@@ -66,8 +99,10 @@ func (y *Ali) UploadFile(req *UploadFileRequest) bool {
 			DriveDirentID: req.Session.DriveDirentID,
 			UploadID:      req.Session.UploadID,
 		}
-		y.FileUploadComplete(subReq)
+		if y.FileUploadComplete(subReq) == nil {
+			return false
+		}
 	}
 
-	return true
+	return y.checkFileIntegrity(req)
 }

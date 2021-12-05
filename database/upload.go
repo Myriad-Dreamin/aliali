@@ -17,19 +17,20 @@ func (s *DB) FindUploadRequest(db *gorm.DB, req *model.UploadModel) bool {
 		return false
 	} else if e.Error != nil {
 		s.Suppress(e.Error)
+		return false
 	}
 
 	return true
 }
 
 func (s *DB) FindMatchedStatusRequest(db *gorm.DB, req *model.UploadModel, st int) bool {
-	e := db.Where(model.UploadModel{
-		Status: st,
-	}).First(req)
+	req.ID = 0
+	e := db.Model(req).Where("status = ?", st).First(req)
 	if e.Error == gorm.ErrRecordNotFound {
 		return false
 	} else if e.Error != nil {
 		s.Suppress(e.Error)
+		return false
 	}
 
 	return true
@@ -47,6 +48,7 @@ func (s *DB) SaveUploadRequest(db *gorm.DB, model *model.UploadModel) {
 	}
 	if db.Error != nil {
 		s.Suppress(db.Error)
+		return
 	}
 
 	return

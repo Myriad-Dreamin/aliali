@@ -1,6 +1,7 @@
 package dispatcher
 
 import (
+	"fmt"
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
@@ -74,6 +75,7 @@ func (d *Dispatcher) Loop() {
 		if !d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusUploading) {
 			break
 		}
+		fmt.Println(getReq())
 		d.xdb.TransitUploadStatus(d.db, getReq(), model.UploadStatusUploading, model.UploadStatusInitialized)
 	}
 
@@ -81,6 +83,7 @@ func (d *Dispatcher) Loop() {
 		if !d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusUploaded) {
 			break
 		}
+		fmt.Println(getReq())
 		d.xdb.TransitUploadStatus(d.db, getReq(), model.UploadStatusUploaded, model.UploadStatusInitialized)
 	}
 

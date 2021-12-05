@@ -1,12 +1,20 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
 	"crypto/sha1"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
+	"hash"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/url"
+	"strings"
 )
 
 type IService interface {
@@ -31,6 +39,7 @@ type IUploadRequest interface {
 
 type IUploadAliView interface {
 	UploadFile(req *ali_drive.UploadFileRequest) bool
+	GetAccessToken() string
 }
 
 type UploadImpl struct {
@@ -119,7 +128,7 @@ func (svc *UploadImpl) Upload(context context.Context, ali IUploadAliView, req I
 	var ses = req.Session()
 	svc.Logger.Printf("begin file upload session: %v", req)
 	if len(ses.Hash) == 0 {
-		err := svc.computeHash(ses, req)
+		err := svc.computeHash(ali.GetAccessToken(), ses, req)
 		if err != nil {
 			return &UploadResponse{Code: UploadHashComputingFailed, Err: err}
 		}
@@ -139,31 +148,52 @@ func (svc *UploadImpl) Upload(context context.Context, ali IUploadAliView, req I
 	return &UploadResponse{Code: UploadOK}
 }
 
-func computeSha1(r io.Reader) ([]byte, error) {
-	h := sha1.New()
-	_, err := io.Copy(h, r)
+func computeHash(hash hash.Hash, r io.Reader) ([]byte, error) {
+	_, err := io.Copy(hash, r)
 	if err != nil {
 		return nil, err
 	}
-	return h.Sum(nil), nil
+	return hash.Sum(nil), nil
 }
 
-func (svc *UploadImpl) computeHash(ses *ali_drive.UploadSession, req IUploadRequest) error {
-	var hash []byte
+func (svc *UploadImpl) computeHash(accessToken string, ses *ali_drive.UploadSession, req IUploadRequest) error {
+	var hashBytes []byte
 	var err error
+	accessToken = strings.TrimPrefix(accessToken, "Bearer ")
 
-	hash, err = computeSha1(req.ReadAt(0, 1024))
+	hashBytes, err = computeHash(sha1.New(), req.ReadAt(0, 1024))
 	if err != nil {
 		return err
 	}
-	ses.PreHash = hex.EncodeToString(hash)
+	ses.PreHash = hex.EncodeToString(hashBytes)
 
-	hash, err = computeSha1(RangeReader(req, req.ChunkHint(), req.Size()))
+	hashBytes, err = computeHash(sha1.New(), RangeReader(req, req.ChunkHint(), req.Size()))
 	if err != nil {
 		ses.PreHash = ""
 		return err
 	}
-	ses.Hash = hex.EncodeToString(hash)
+	ses.Hash = hex.EncodeToString(hashBytes)
+
+	if req.Size() != 0 {
+		m := url.PathEscape(url.PathEscape(accessToken))
+		hashBytes, err = computeHash(md5.New(), bytes.NewReader([]byte(m)))
+		if err != nil {
+			ses.PreHash = ""
+			ses.Hash = ""
+			return err
+		}
+
+		start := binary.BigEndian.Uint64(hashBytes) % uint64(req.Size())
+		hashBytes, err = ioutil.ReadAll(req.ReadAt(int64(start), 8))
+		if err != nil {
+			ses.PreHash = ""
+			ses.Hash = ""
+			return err
+		}
+
+		ses.ProofHash = base64.URLEncoding.EncodeToString(hashBytes)
+	}
+
 	return nil
 }
 
