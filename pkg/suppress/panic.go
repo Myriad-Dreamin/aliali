@@ -9,6 +9,10 @@ func (PanicAll) Suppress(err error) {
 	}
 }
 
+func (PanicAll) Restore() error {
+	return nil
+}
+
 func (PanicAll) WarnOnce(err error) {
 	if err != nil {
 		panic(err)

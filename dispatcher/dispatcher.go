@@ -12,6 +12,12 @@ import (
 	"os"
 )
 
+type ServiceContext struct {
+	S         suppress.ISuppress
+	authedAli *ali_drive.Ali
+	Impl      service.IService
+}
+
 type Dispatcher struct {
 	configPath string
 	dbPath     string
@@ -31,7 +37,8 @@ type Dispatcher struct {
 	logger    *log.Logger
 
 	fileUploads  chan *ali_notifier.FsUploadRequest
-	serviceQueue chan service.IService
+	serviceQueue chan *ServiceContext
+	tokenInvalid chan bool
 }
 
 type Option = func(w *Dispatcher) *Dispatcher
@@ -76,9 +83,9 @@ func WithNotifier(notifier ali_notifier.INotifier) Option {
 
 func WithServiceReplicate(services ...service.IService) Option {
 	return func(w *Dispatcher) *Dispatcher {
-		w.serviceQueue = make(chan service.IService, len(services))
+		w.serviceQueue = make(chan *ServiceContext, len(services))
 		for i := range services {
-			w.serviceQueue <- services[i]
+			w.serviceQueue <- &ServiceContext{Impl: services[i]}
 		}
 		return w
 	}
@@ -106,7 +113,7 @@ func NewDispatcher(options ...Option) *Dispatcher {
 		}
 	}
 
-	w.ali = w.makeAliClient()
+	w.ali = w.makeAliClient(w.s)
 	if w.cfg == nil {
 		if len(w.configPath) == 0 {
 			w.configPath = DefaultConfigPath
@@ -122,10 +129,13 @@ func NewDispatcher(options ...Option) *Dispatcher {
 		}
 		w.db = w.openDB()
 	}
+	w.tokenInvalid = make(chan bool, 1)
 	if w.serviceQueue == nil {
-		w.serviceQueue = make(chan service.IService, 1)
-		w.serviceQueue <- &service.UploadImpl{
-			Logger: log.New(os.Stderr, "[service] ", log.LUTC|log.Llongfile),
+		w.serviceQueue = make(chan *ServiceContext, 1)
+		w.serviceQueue <- &ServiceContext{
+			Impl: &service.UploadImpl{
+				Logger: log.New(os.Stderr, "[service] ", log.LUTC|log.Llongfile),
+			},
 		}
 	}
 	if w.xdb == nil {

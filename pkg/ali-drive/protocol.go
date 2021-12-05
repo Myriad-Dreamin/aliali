@@ -4,6 +4,12 @@ import (
 	"io"
 )
 
+type ApiErrorResponse struct {
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	RequestId string `json:"requestId"`
+}
+
 type ApiAcquireTokenRequest struct {
 	GrantType    string `json:"grant_type"`
 	RefreshToken string `json:"refresh_token"`

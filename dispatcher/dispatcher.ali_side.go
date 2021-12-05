@@ -6,11 +6,12 @@ import (
 	"github.com/Myriad-Dreamin/aliali/database"
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
+	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"time"
 )
 
-func (d *Dispatcher) makeAliClient() *ali_drive.Ali {
-	a := ali_drive.NewAli(d.s)
+func (d *Dispatcher) makeAliClient(suppress suppress.ISuppress) *ali_drive.Ali {
+	a := ali_drive.NewAli(suppress)
 	a.Headers = d.httpHeaders
 	return a
 }
@@ -34,10 +35,14 @@ func (d *Dispatcher) refreshAuth() {
 		d.logger.Printf("using the access token of aliyunpan in the cache")
 	}
 
-	d.auth = m
-
-	newCli := d.makeAliClient()
 	b := m.Get(d.s)
-	newCli.SetAccessToken(fmt.Sprintf("%s %s", b.TokenType, b.AccessToken))
-	d.authedAli = newCli
+	tok := fmt.Sprintf("%s %s", b.TokenType, b.AccessToken)
+	if d.authedAli == nil {
+		newCli := d.makeAliClient(d.s)
+		newCli.SetAccessToken(tok)
+		d.authedAli = newCli
+	} else {
+		d.authedAli.SetAccessToken(tok)
+	}
+	d.auth = m
 }

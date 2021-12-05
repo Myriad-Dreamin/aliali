@@ -168,8 +168,12 @@ func (svc *UploadImpl) computeHash(ses *ali_drive.UploadSession, req IUploadRequ
 }
 
 type MockService struct {
+	UploadHandler func(context context.Context, ali IUploadAliView, req IUploadRequest) *UploadResponse
 }
 
 func (svc *MockService) Upload(context context.Context, ali IUploadAliView, req IUploadRequest) *UploadResponse {
+	if svc.UploadHandler != nil {
+		return svc.UploadHandler(context, ali, req)
+	}
 	return &UploadResponse{Code: 0}
 }

@@ -12,20 +12,21 @@ import (
 func (d *Dispatcher) serveUploadRequest(
 	ifs FsClearInterface, req *ali_notifier.FsUploadRequest, uploadReq service.IUploadRequest) error {
 	if !d.ensureFsFileExists(ifs, req.LocalPath) {
+		d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusInitialized, model.UploadStatusSettledExitFileFlyAway)
 		return nil
 	}
 	if !d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusInitialized, model.UploadStatusUploading) {
 		return nil
 	}
 
-	serviceImpl := <-d.serviceQueue
+	serviceCtx := d.waitService()
 
 	go func() {
-		resp := serviceImpl.Upload(context.TODO(), d.authedAli, uploadReq)
+		resp := serviceCtx.Impl.Upload(context.TODO(), serviceCtx.authedAli, uploadReq)
 
 		var returnService = func() {
 			// the service is blameless
-			d.serviceQueue <- serviceImpl
+			d.serviceQueue <- serviceCtx
 		}
 
 		var saveSession = func() {
@@ -41,28 +42,40 @@ func (d *Dispatcher) serveUploadRequest(
 			}
 		}
 
+		if resp == nil {
+			d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusInitialized)
+			returnService()
+			return
+		}
+
 		// handle error after returning service
 		// we leverage the bottom half of this coroutine to process an upload response
 		switch resp.Code {
 		case service.UploadOK:
 			saveSession()
 			if !d.ensureFsFileExists(ifs, req.LocalPath) {
+				d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusSettledExitFileFlyAway)
 				returnService()
 				return
 			}
 			if d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusUploaded) {
 				d.checkUploadAndClear(ifs, req)
 			}
+			returnService()
+			return
 		case service.UploadCancelled:
 			saveSession()
 			d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusInitialized)
+			returnService()
+			return
 		default:
 			if resp.Err != nil {
 				d.s.Suppress(resp.Err)
 			}
 			d.xdb.TransitUploadStatus(d.db, req, model.UploadStatusUploading, model.UploadStatusInitialized)
+			returnService()
+			return
 		}
-		returnService()
 	}()
 	return nil
 }
