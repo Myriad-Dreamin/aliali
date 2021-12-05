@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"github.com/Myriad-Dreamin/aliali/model"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"gorm.io/gorm"
@@ -19,7 +18,6 @@ func (s *DB) FindAuthModelByKey(db *gorm.DB, model *model.AliAuthModel) bool {
 		s.Suppress(e.Error)
 	}
 
-	fmt.Println("finding", model.ExpiresLocal, model.ID)
 	return true
 }
 
@@ -27,14 +25,11 @@ func (s *DB) SaveAuthModel(db *gorm.DB, model *model.AliAuthModel) {
 	if model.ID == 0 {
 		if !s.FindAuthModelByKey(db, model) {
 			db = db.Create(model)
-			fmt.Println("c", model.ExpiresLocal, model.ID)
 		} else {
 			db = db.Save(model)
-			fmt.Println("s1", model.ExpiresLocal, model.ID)
 		}
 	} else {
 		db = db.Save(model)
-		fmt.Println("s2", model.ExpiresLocal, model.ID)
 	}
 	if db.Error != nil {
 		s.Suppress(db.Error)
