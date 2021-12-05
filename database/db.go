@@ -16,6 +16,7 @@ func (s *DB) FindAuthModelByKey(db *gorm.DB, model *model.AliAuthModel) bool {
 		return false
 	} else if e.Error != nil {
 		s.Suppress(e.Error)
+		return false
 	}
 
 	return true
