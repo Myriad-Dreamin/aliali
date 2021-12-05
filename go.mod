@@ -2,11 +2,10 @@ module github.com/Myriad-Dreamin/aliali
 
 go 1.17
 
-replace github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.2.0
-
 require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/kataras/iris/v12 v12.2.0-alpha2
+	github.com/microcosm-cc/bluemonday v1.0.16 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.2.6
 	gorm.io/gorm v1.22.4
@@ -19,7 +18,6 @@ require (
 	github.com/Shopify/goreferrer v0.0.0-20181106222321-ec9c9a553398 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible // indirect
-	github.com/chris-ramon/douceur v0.2.0 // indirect
 	github.com/eknkc/amber v0.0.0-20171010120322-cdade1c07385 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.1 // indirect
@@ -37,7 +35,6 @@ require (
 	github.com/kataras/tunnel v0.0.2 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-sqlite3 v1.14.9 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
