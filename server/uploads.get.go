@@ -5,13 +5,15 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/context"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
 type GetUploadsRequest struct {
-	Deleted  *bool `url:"deleted"`
-	Page     int64 `url:"page"`
-	PageSize int64 `url:"page_size"`
+	Deleted      *bool  `url:"deleted"`
+	GroupPattern string `url:"group"`
+	Page         int64  `url:"page"`
+	PageSize     int64  `url:"page_size"`
 }
 
 type UploadDTO struct {
@@ -61,6 +63,11 @@ func (srv *Server) GetUploadList(ctx *context.Context) {
 	db := srv.DB.Model(&model.UploadModel{}).Debug().
 		Offset(int(offset)).
 		Limit(int(limit))
+	if strings.Contains(req.GroupPattern, "%") {
+		db = db.Where("group like ?", req.GroupPattern)
+	} else if len(req.GroupPattern) != 0 {
+		db = db.Where("group = ?", req.GroupPattern)
+	}
 
 	if req.Deleted != nil && *req.Deleted {
 		db = db.Unscoped().Where("deleted_at is not null")
