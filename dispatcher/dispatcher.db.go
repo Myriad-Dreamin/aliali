@@ -30,12 +30,6 @@ func (d *DBManager) OpenSqliteDB(dsn string) *gorm.DB {
 	return d.syncDBSchemas(db)
 }
 
-func (d *Dispatcher) syncDBSchemas(db *gorm.DB) *gorm.DB {
-	d.s.Suppress(db.AutoMigrate(&model.AliAuthModel{}))
-	d.s.Suppress(db.AutoMigrate(&model.UploadModel{}))
-	return db
-}
-
 func (d *Dispatcher) openDB() *gorm.DB {
 	return d.dbMgr.OpenSqliteDB(d.dbPath)
 }
