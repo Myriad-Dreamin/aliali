@@ -80,6 +80,6 @@ func (srv *Server) Login(ctx *context.Context) {
 		Code:      CodeOK,
 		Message:   "登录成功",
 		Token:     tokenString,
-		ExpiresIn: expiresIn,
+		ExpiresIn: expiresIn / time.Second,
 	})
 }
