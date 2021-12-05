@@ -6,6 +6,7 @@ import (
 	"github.com/kataras/iris/v12/context"
 	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +28,7 @@ type BiliNotificationResponse struct {
 }
 
 type WebhookNotificationRequest struct {
+	Group      string `url:"group"`
 	Path       string `url:"path"`
 	RemotePath string `url:"remote"`
 }
@@ -100,10 +102,21 @@ func (b *HttpRecorderNotifier) NotifyBilibiliEvent(ctx *context.Context) {
 
 		if req.EventType == "FileClosed" {
 			var relPath string
+			var group string
 			if req.EventData != nil {
 				if r, ok := req.EventData["RelativePath"]; ok {
 					if r2, ok := r.(string); ok {
 						relPath = r2
+					}
+				}
+				if r, ok := req.EventData["RoomId"]; ok {
+					if r2, ok := r.(float64); ok {
+						group = strconv.FormatInt(int64(r2), 10)
+						if r3, ok := req.EventData["Name"]; ok {
+							if r4, ok := r3.(string); ok {
+								group = fmt.Sprintf("%s-%s", group, r4)
+							}
+						}
 					}
 				}
 			}
@@ -118,7 +131,7 @@ func (b *HttpRecorderNotifier) NotifyBilibiliEvent(ctx *context.Context) {
 			}
 
 			log.Printf("检测到待上传的文件 %s\n", relPath)
-			b.NotifyMaybeUploadEvent(ctx, "", relPath, filepath.Join(b.StorePath, relPath))
+			b.NotifyMaybeUploadEvent(ctx, group, relPath, filepath.Join(b.StorePath, relPath))
 			return
 		}
 	}
@@ -139,7 +152,7 @@ func (b *HttpRecorderNotifier) NotifyWebhookEvent(ctx *context.Context) {
 		return
 	}
 
-	b.NotifyMaybeUploadEvent(ctx, "", req.Path, req.RemotePath)
+	b.NotifyMaybeUploadEvent(ctx, req.Group, req.Path, req.RemotePath)
 }
 
 func (b *HttpRecorderNotifier) ExposeHttp(r *iris.Application) {
