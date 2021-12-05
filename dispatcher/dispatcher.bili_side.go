@@ -10,12 +10,7 @@ func (d *Dispatcher) setupNotifier() {
 }
 
 func (d *Dispatcher) OnFsUpload(req *ali_notifier.FsUploadRequest) {
-	var m = &model.UploadModel{
-		DriveID:    req.DriveID,
-		RemotePath: req.RemotePath,
-		LocalPath:  req.LocalPath,
-		Raw:        nil,
-	}
+	var m = fsUploadReq2Model(req)
 
 	if len(m.DriveID) == 0 {
 		m.DriveID = d.cfg.AliDrive.DriveId

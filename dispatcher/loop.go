@@ -3,7 +3,6 @@ package dispatcher
 import (
 	"github.com/Myriad-Dreamin/aliali/model"
 	ali_drive "github.com/Myriad-Dreamin/aliali/pkg/ali-drive"
-	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
 	"runtime"
 	"time"
 )
@@ -61,21 +60,12 @@ func (d *Dispatcher) Loop() {
 	tick := time.NewTicker(time.Second)
 	var stackModel model.UploadModel
 
-	var getReq = func() *ali_notifier.FsUploadRequest {
-		return &ali_notifier.FsUploadRequest{
-			TransactionID: stackModel.ID,
-			DriveID:       stackModel.DriveID,
-			RemotePath:    stackModel.RemotePath,
-			LocalPath:     stackModel.LocalPath,
-		}
-	}
-
 	// Rollback from state::uploading to state::initialized (wait for uploading)
 	for {
 		if !d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusUploading) {
 			break
 		}
-		d.xdb.TransitUploadStatus(d.db, getReq(), model.UploadStatusUploading, model.UploadStatusInitialized)
+		d.xdb.TransitUploadStatus(d.db, uploadModel2fsReq(&stackModel), model.UploadStatusUploading, model.UploadStatusInitialized)
 	}
 
 	// Thanks for rapid uploading, we can set status::uploaded => status::initialized without spending too much
@@ -83,7 +73,7 @@ func (d *Dispatcher) Loop() {
 		if !d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusUploaded) {
 			break
 		}
-		d.xdb.TransitUploadStatus(d.db, getReq(), model.UploadStatusUploaded, model.UploadStatusInitialized)
+		d.xdb.TransitUploadStatus(d.db, uploadModel2fsReq(&stackModel), model.UploadStatusUploaded, model.UploadStatusInitialized)
 	}
 
 	for {
@@ -102,7 +92,7 @@ func (d *Dispatcher) Loop() {
 			}
 		case <-tick.C:
 			if d.xdb.FindMatchedStatusRequest(d.db, &stackModel, model.UploadStatusInitialized) {
-				d.fileUploads <- getReq()
+				d.fileUploads <- uploadModel2fsReq(&stackModel)
 			}
 		}
 	}

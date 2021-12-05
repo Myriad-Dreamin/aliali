@@ -31,12 +31,7 @@ func (d *Dispatcher) serveUploadRequest(
 		}
 
 		var saveSession = func() {
-			var m = &model.UploadModel{
-				ID:         req.TransactionID,
-				DriveID:    req.DriveID,
-				RemotePath: req.RemotePath,
-				LocalPath:  req.LocalPath,
-			}
+			var m = fsUploadReq2Model(req)
 
 			if m.Set(d.s, uploadReq.Session()) {
 				d.xdb.SaveUploadSession(d.db, m)

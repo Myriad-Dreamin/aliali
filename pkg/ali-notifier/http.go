@@ -46,7 +46,7 @@ func SecureJoin(root string, components string) string {
 	return res
 }
 
-func (b *HttpRecorderNotifier) NotifyMaybeUploadEvent(ctx *context.Context, relLocalPath string, remotePath string) {
+func (b *HttpRecorderNotifier) NotifyMaybeUploadEvent(ctx *context.Context, group string, relLocalPath string, remotePath string) {
 	if len(relLocalPath) == 0 {
 		ctx.StatusCode(iris.StatusBadRequest)
 		_, _ = ctx.JSON(WebhookNotificationResponse{
@@ -74,6 +74,7 @@ func (b *HttpRecorderNotifier) NotifyMaybeUploadEvent(ctx *context.Context, relL
 	}
 
 	b.Emit(&FsUploadRequest{
+		Group:      group,
 		DriveID:    "",
 		RemotePath: remotePath,
 		LocalPath:  localPath,
@@ -117,7 +118,7 @@ func (b *HttpRecorderNotifier) NotifyBilibiliEvent(ctx *context.Context) {
 			}
 
 			log.Printf("检测到待上传的文件 %s\n", relPath)
-			b.NotifyMaybeUploadEvent(ctx, relPath, filepath.Join(b.StorePath, relPath))
+			b.NotifyMaybeUploadEvent(ctx, "", relPath, filepath.Join(b.StorePath, relPath))
 			return
 		}
 	}
@@ -138,7 +139,7 @@ func (b *HttpRecorderNotifier) NotifyWebhookEvent(ctx *context.Context) {
 		return
 	}
 
-	b.NotifyMaybeUploadEvent(ctx, req.Path, req.RemotePath)
+	b.NotifyMaybeUploadEvent(ctx, "", req.Path, req.RemotePath)
 }
 
 func (b *HttpRecorderNotifier) ExposeHttp(r *iris.Application) {
