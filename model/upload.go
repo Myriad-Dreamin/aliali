@@ -9,14 +9,12 @@ import (
 )
 
 const (
-	UploadStatusUninitialized   int = 0
-	UploadStatusInitialized         = 1
-	UploadStatusUploading           = 2
-	UploadStatusUploaded            = 3
-	UploadStatusSettledClear        = 4
-	UploadStatusSettledNotClear     = 5
+	UploadStatusUninitialized int = 0
+	UploadStatusInitialized       = 1
+	UploadStatusUploading         = 2
+	UploadStatusUploaded          = 3
+	UploadStatusSettledClear      = 4
 
-	UploadStatusSettledExit            = 1000
 	UploadStatusSettledExitFileFlyAway = 1001
 )
 
