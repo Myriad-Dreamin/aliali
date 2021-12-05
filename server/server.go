@@ -12,12 +12,16 @@ import (
 
 const (
 	CodeOK int = iota
+	CodeInvalidParams
+	CodeDBExecutionError
 	CodeLoginNotConfigured
 	CodeLoginNoSuchAccount
 	CodeLoginWrongPassword
+	CodeNoSuchId
 )
 
-type MessageResponse struct {
+type StdResponse struct {
+	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
@@ -47,5 +51,6 @@ func (srv *Server) ExposeHttp(r *iris.Application) {
 	r.PartyFunc("api/v1", func(p router.Party) {
 		p.Use(srv.JwtHandler().Serve)
 		p.Handle("GET", "/uploads", srv.GetUploadList)
+		p.Handle("DELETE", "/upload", srv.DeleteUpload)
 	})
 }

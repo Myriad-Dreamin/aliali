@@ -9,6 +9,7 @@ import (
 )
 
 type GetUploadsRequest struct {
+	Deleted  *bool `url:"deleted"`
 	Page     int64 `url:"page"`
 	PageSize int64 `url:"page_size"`
 }
@@ -28,7 +29,9 @@ type UploadDTO struct {
 }
 
 type GetUploadsResponse struct {
-	Items []UploadDTO `json:"items"`
+	Items   []UploadDTO `json:"items"`
+	Count   int64       `json:"count"`
+	Current int64       `json:"current"`
 }
 
 func (srv *Server) GetUploadList(ctx *context.Context) {
@@ -36,7 +39,8 @@ func (srv *Server) GetUploadList(ctx *context.Context) {
 	if err := ctx.ReadQuery(&req); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
 		srv.Logger.Println(err.Error())
-		_, _ = ctx.JSON(MessageResponse{
+		_, _ = ctx.JSON(StdResponse{
+			Code:    CodeInvalidParams,
 			Message: "解析请求参数发生错误，查看后台日志了解内容...",
 		})
 		return
@@ -50,14 +54,22 @@ func (srv *Server) GetUploadList(ctx *context.Context) {
 		req.PageSize = 20
 	}
 
-	offset := req.Page*req.PageSize - req.Page
+	offset := req.Page*req.PageSize - req.PageSize
 	limit := req.PageSize
 
 	var list []model.UploadModel
-	srv.DB.Model(&model.UploadModel{}).
+	db := srv.DB.Model(&model.UploadModel{}).Debug().
 		Offset(int(offset)).
-		Limit(int(limit)).
-		Find(&list)
+		Limit(int(limit))
+
+	if req.Deleted != nil && *req.Deleted {
+		db = db.Unscoped().Where("deleted_at is not null")
+	}
+
+	db.Find(&list)
+
+	var cnt int64
+	db.Count(&cnt)
 
 	var dtoList []UploadDTO
 	for i := range list {
@@ -81,6 +93,8 @@ func (srv *Server) GetUploadList(ctx *context.Context) {
 	}
 
 	_, _ = ctx.JSON(&GetUploadsResponse{
-		Items: dtoList,
+		Items:   dtoList,
+		Count:   cnt,
+		Current: offset,
 	})
 }

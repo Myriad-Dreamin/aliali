@@ -34,7 +34,8 @@ func (srv *Server) Login(ctx *context.Context) {
 	if err := ctx.ReadJSON(&req); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
 		srv.Logger.Println(err.Error())
-		_, _ = ctx.JSON(MessageResponse{
+		_, _ = ctx.JSON(StdResponse{
+			Code:    CodeInvalidParams,
 			Message: "解析请求参数发生错误，查看后台日志了解内容...",
 		})
 		return
@@ -80,6 +81,6 @@ func (srv *Server) Login(ctx *context.Context) {
 		Code:      CodeOK,
 		Message:   "登录成功",
 		Token:     tokenString,
-		ExpiresIn: expiresIn / time.Second,
+		ExpiresIn: expiresIn / time.Millisecond,
 	})
 }
