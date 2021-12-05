@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/Myriad-Dreamin/aliali/dispatcher"
 	ali_notifier "github.com/Myriad-Dreamin/aliali/pkg/ali-notifier"
+	iris_cors "github.com/Myriad-Dreamin/aliali/pkg/iris-cors"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"github.com/Myriad-Dreamin/aliali/server"
-	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris/v12"
 	"net/http"
 	_ "net/http/pprof"
@@ -23,15 +23,7 @@ func main() {
 	notifier.StorePath = d.GetConfig().AliDrive.RootPath
 
 	r := iris.New().Configure(iris.WithoutBanner)
-
-	r.AllowMethods(iris.MethodOptions)
-	crs := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"OPTIONS", "HEAD", "GET", "POST", "DELETE"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
-	})
-	r.Use(crs)
+	iris_cors.Use(r)
 	notifier.ExposeHttp(r)
 	(&server.Server{
 		S:  s,

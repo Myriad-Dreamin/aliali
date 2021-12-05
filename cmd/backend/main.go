@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/Myriad-Dreamin/aliali/dispatcher"
+	iris_cors "github.com/Myriad-Dreamin/aliali/pkg/iris-cors"
 	"github.com/Myriad-Dreamin/aliali/pkg/suppress"
 	"github.com/Myriad-Dreamin/aliali/server"
-	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris/v12"
 	"log"
 	"os"
@@ -19,13 +19,7 @@ func main() {
 	r := iris.New()
 
 	r.AllowMethods(iris.MethodOptions)
-	crs := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"OPTIONS", "HEAD", "GET", "POST", "DELETE"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
-	})
-	r.Use(crs)
+	iris_cors.Use(r)
 	(&server.Server{
 		Logger: log.New(os.Stderr, "[backend] ", log.Llongfile|log.LUTC),
 		S:      s,
