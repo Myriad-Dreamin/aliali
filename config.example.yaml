@@ -8,3 +8,18 @@ backend:
   jwt-secret: d36671dca45d8ca03e86
   account: kamiyoru
   password-hash: md5-hash
+servers:
+  registry:
+    name: Registry
+    schema: http
+    server_port: 10307
+    registry_host: localhost
+    registry_port: 10308
+    secret: d36671dca45d8ca03e86
+  kamiya:
+    name: Kamiya
+    schema: http
+    upstream: registry
+    server_host: localhost
+    server_port: 10307
+    registry_port: 10308

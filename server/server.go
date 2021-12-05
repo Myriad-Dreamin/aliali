@@ -12,12 +12,14 @@ import (
 
 const (
 	CodeOK int = iota
+	CodeErr
 	CodeInvalidParams
 	CodeDBExecutionError
 	CodeLoginNotConfigured
 	CodeLoginNoSuchAccount
 	CodeLoginWrongPassword
 	CodeNoSuchId
+	CodeNoSuchServer
 )
 
 type StdResponse struct {
@@ -53,4 +55,30 @@ func (srv *Server) ExposeHttp(r *iris.Application) {
 		p.Handle("GET", "/uploads", srv.GetUploadList)
 		p.Handle("DELETE", "/upload", srv.DeleteUpload)
 	})
+}
+
+func (srv *Server) ReadJSON(ctx *context.Context, req interface{}) bool {
+	if err := ctx.ReadJSON(req); err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		srv.Logger.Println(err.Error())
+		_, _ = ctx.JSON(StdResponse{
+			Code:    CodeInvalidParams,
+			Message: "解析请求参数发生错误，查看后台日志了解内容...",
+		})
+		return false
+	}
+	return true
+}
+
+func (srv *Server) ReadQuery(ctx *context.Context, req interface{}) bool {
+	if err := ctx.ReadQuery(req); err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		srv.Logger.Println(err.Error())
+		_, _ = ctx.JSON(StdResponse{
+			Code:    CodeInvalidParams,
+			Message: "解析请求参数发生错误，查看后台日志了解内容...",
+		})
+		return false
+	}
+	return true
 }

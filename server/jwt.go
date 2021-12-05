@@ -17,5 +17,4 @@ func (srv *Server) JwtHandler() *jwt_middleware.Middleware {
 		SigningMethod: jwt_middleware.SigningMethodHS512,
 		Expiration:    true,
 	})
-
 }

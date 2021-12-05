@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/Myriad-Dreamin/aliali/model"
-	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/context"
 	"gorm.io/gorm"
 	"strings"
@@ -38,13 +37,7 @@ type GetUploadsResponse struct {
 
 func (srv *Server) GetUploadList(ctx *context.Context) {
 	var req GetUploadsRequest
-	if err := ctx.ReadQuery(&req); err != nil {
-		ctx.StatusCode(iris.StatusBadRequest)
-		srv.Logger.Println(err.Error())
-		_, _ = ctx.JSON(StdResponse{
-			Code:    CodeInvalidParams,
-			Message: "解析请求参数发生错误，查看后台日志了解内容...",
-		})
+	if !srv.ReadQuery(ctx, &req) {
 		return
 	}
 

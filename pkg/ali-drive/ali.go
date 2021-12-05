@@ -78,7 +78,7 @@ func (y *Ali) processResp(res *resty.Response, err error) []byte {
 		}
 		var messageUnpack ApiErrorResponse
 		sErr := json.Unmarshal(b, &messageUnpack)
-		if sErr != nil || len(messageUnpack.Code) == 0 {
+		if sErr == nil && len(messageUnpack.Code) != 0 {
 			y.suppress.Suppress(semaError(getCaller(1), res, &messageUnpack))
 		} else {
 			y.suppress.Suppress(errors.New(string(res.Body())))
